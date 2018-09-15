@@ -1,12 +1,8 @@
 ﻿using UnityEditor;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System;
 using System.IO;
 
-public class VertexData
-{
+public class VertexData {
 	public Vector3 position;
 	public Vector2 uv;
 	public Color color;
@@ -14,49 +10,43 @@ public class VertexData
 };
 
 [CanEditMultipleObjects]
-public class TerrainCreation : EditorWindow
-{
+public class TerrainCreation : EditorWindow {
+	
 	int GridResolution = 1024;
-
-	static float NoiseScale = 1.0f;
 	static int Octavees = 8;
 
-	Texture2D noiseTex;
+	static float NoiseScale = 1.0f;
 
 	Color[] pix;
 
+	Texture2D noiseTex;
+	
 	[MenuItem("Terrain/Create Terrain...")]
-	static void Init()
-	{
+	static void Init () {
 		EditorWindow.GetWindow<TerrainCreation>().Show();
 	}
 
-	public void OnGUI()
-	{
+	public void OnGUI () {
 		NoiseScale = EditorGUILayout.FloatField("Noise Scale", NoiseScale);
-
 		Octavees = EditorGUILayout.IntSlider("Number of Octavees", Octavees, 0, 8);
-
-		if (GUILayout.Button ("Create New Texture"))
+		if (GUILayout.Button ("Create New Texture")) {
 			CreateNoiseTexture();
+		}
 
 		// TODO Add your editor extension code here
 	}
 
-	void CreateNoiseTexture()
-	{
+	void CreateNoiseTexture () {
 		noiseTex = new Texture2D(GridResolution, GridResolution);
 		pix = new Color[GridResolution * GridResolution];
 
 		float xOri = UnityEngine.Random.value * 100000.0f;
 		float yOri = UnityEngine.Random.value * 100000.0f;
-
+		
 		float y = 0.0f;
-		while (y < noiseTex.height)
-		{
+		while (y < noiseTex.height) {
 			float x = 0.0f;
-			while (x < noiseTex.width)
-			{
+			while (x < noiseTex.width) {
 				float xCoord = xOri + x / noiseTex.width * NoiseScale + Mathf.Sin(y);
 				float yCoord = yOri + y / noiseTex.height * NoiseScale;
 
@@ -66,33 +56,29 @@ public class TerrainCreation : EditorWindow
                 
 				x++;
             }
-
             y++;
         }
 
         noiseTex.SetPixels(pix);
         noiseTex.Apply();
 
-		byte[] bytes = noiseTex.EncodeToPNG ();
+		byte[] bytes = noiseTex.EncodeToPNG();
 
 		Debug.Log("Creating Terrain Texture: " + Application.dataPath + "/TerrainTexture.png");
 
-		File.WriteAllBytes (Application.dataPath + "/TerrainTexture.png", bytes);
+		File.WriteAllBytes(Application.dataPath + "/TerrainTexture.png", bytes);
 
 		AssetDatabase.ImportAsset("Assets/TerrainTexture.png");
 	}
 
-	public float OctaveesNoise2D(float x, float y, int octNum, float frq, float amp)
-	{
+	public float OctaveesNoise2D(float x, float y, int octNum, float frq, float amp) {
 		float gain = 1.0f;
 		float sum = 0.0f;
 
-		for (int i = 0; i < octNum; i++)
-		{
+		for (int i = 0; i < octNum; i++) {
 			sum +=  Mathf.PerlinNoise(x * gain / frq, y * gain / frq) * amp / gain;
 			gain *= 2.0f;
 		}
-
 		return sum;
 	}
 }
