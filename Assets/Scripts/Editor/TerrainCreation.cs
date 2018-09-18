@@ -1,6 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 using System.IO;
+using System.Collections.Generic;
 
 public class VertexData {
 	public Vector3 position;
@@ -71,7 +72,7 @@ public class TerrainCreation : EditorWindow {
 		AssetDatabase.ImportAsset("Assets/TerrainTexture.png");
 	}
 
-	public float OctaveesNoise2D(float x, float y, int octNum, float frq, float amp) {
+	public float OctaveesNoise2D (float x, float y, int octNum, float frq, float amp) {
 		float gain = 1.0f;
 		float sum = 0.0f;
 
@@ -80,5 +81,14 @@ public class TerrainCreation : EditorWindow {
 			gain *= 2.0f;
 		}
 		return sum;
+	}
+
+	public void Test () {
+		Vector2 uv = new Vector2();
+		float maxHeight;
+		Texture2D heightMap;
+		List<Vector3> vertices;
+		List<Vector2> uvs;
+		List<Color> cor;
 	}
 }
