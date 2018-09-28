@@ -1,73 +1,103 @@
 ﻿using UnityEditor;
+using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
-using System.Collections.Generic;
-
-public class VertexData {
-	public Vector3 position;
-	public Vector2 uv;
-	public Color color;
-	public Vector3 normal;
-};
 
 [CanEditMultipleObjects]
 public class TerrainCreation : EditorWindow {
-	
-	int GridResolution = 1024;
-	static int Octavees = 8;
 
-	static float NoiseScale = 1.0f;
+    public int maxHeight;
+    public int xSize;
+    public int ySize;
+    private int gridResolution = 1024;
+    private static int octavees = 8;
+    public List<int> triangles = new List<int>();
 
-	Color[] pix;
+    private static float noiseScale = 1.0f;
+    
+    public bool flat;
 
-	Texture2D noiseTex;
-	
+    public List<Vector3> vertex = new List<Vector3>();
+    public List<Vector3> normals = new List<Vector3>();
+    
+    public List<Vector2> uvs = new List<Vector2>();
+
+    private Color[] pix;
+    public List<Color> colors = new List<Color>();
+    
+    private static Texture2D noiseTex;
+    public Texture2D heightMap;
+
+    public MeshFilter mesh;
+
 	[MenuItem("Terrain/Create Terrain...")]
 	static void Init () {
 		EditorWindow.GetWindow<TerrainCreation>().Show();
 	}
 
 	public void OnGUI () {
-		NoiseScale = EditorGUILayout.FloatField("Noise Scale", NoiseScale);
-		Octavees = EditorGUILayout.IntSlider("Number of Octavees", Octavees, 0, 8);
-		if (GUILayout.Button ("Create New Texture")) {
-			CreateNoiseTexture();
-		}
+        EditorGUILayout.LabelField("Texture");
 
-		// TODO Add your editor extension code here
-	}
+		noiseScale = EditorGUILayout.FloatField("Noise Scale", noiseScale);
+
+		octavees = EditorGUILayout.IntSlider("Number of Octavees", octavees, 0, 8);
+
+        if (GUILayout.Button("Create New Texture")) {
+            CreateNoiseTexture();
+        }
+
+        EditorGUILayout.LabelField("Terrain");
+        
+        xSize = EditorGUILayout.IntField("X Size: ", xSize);
+
+        ySize = EditorGUILayout.IntField("Y Size: ", ySize);
+
+        maxHeight = EditorGUILayout.IntSlider("Max Height: ", maxHeight, 1, 100);
+
+        flat = EditorGUILayout.Toggle("Terrain Flat: ",flat);
+
+        GUILayout.Label("Select Plane: ");
+        mesh = (MeshFilter)EditorGUILayout.ObjectField(mesh, typeof(MeshFilter));
+        GUILayout.Label("Select HeightMap: ");
+        heightMap = (Texture2D)EditorGUILayout.ObjectField(heightMap, typeof(Texture2D));
+        if (GUILayout.Button("Generate Terrain")) {
+            GenerateProceduralTerrain();
+        }
+
+    }
 
 	void CreateNoiseTexture () {
-		noiseTex = new Texture2D(GridResolution, GridResolution);
-		pix = new Color[GridResolution * GridResolution];
+		noiseTex = new Texture2D(gridResolution, gridResolution);
+		pix = new Color[gridResolution * gridResolution];
 
 		float xOri = UnityEngine.Random.value * 100000.0f;
 		float yOri = UnityEngine.Random.value * 100000.0f;
-		
+
 		float y = 0.0f;
 		while (y < noiseTex.height) {
 			float x = 0.0f;
 			while (x < noiseTex.width) {
-				float xCoord = xOri + x / noiseTex.width * NoiseScale + Mathf.Sin(y);
-				float yCoord = yOri + y / noiseTex.height * NoiseScale;
+				float xCoord = xOri + x / noiseTex.width * noiseScale + Mathf.Sin(y);
+				float yCoord = yOri + y / noiseTex.height * noiseScale;
 
-				float sample = OctaveesNoise2D(xOri + x / noiseTex.width, yOri + y / noiseTex.height, Octavees, 1.0f, 0.75f);
+				float sample = OctaveesNoise2D(xOri + x / noiseTex.width, yOri + y / noiseTex.height, octavees, 1.0f, 0.75f);
 
 				pix[(int) y * noiseTex.width + (int) x] = new Color(sample, sample, sample);
                 
 				x++;
             }
+
             y++;
         }
 
         noiseTex.SetPixels(pix);
         noiseTex.Apply();
 
-		byte[] bytes = noiseTex.EncodeToPNG();
+		byte[] bytes = noiseTex.EncodeToPNG ();
 
 		Debug.Log("Creating Terrain Texture: " + Application.dataPath + "/TerrainTexture.png");
 
-		File.WriteAllBytes(Application.dataPath + "/TerrainTexture.png", bytes);
+		File.WriteAllBytes (Application.dataPath + "/TerrainTexture.png", bytes);
 
 		AssetDatabase.ImportAsset("Assets/TerrainTexture.png");
 	}
@@ -80,15 +110,147 @@ public class TerrainCreation : EditorWindow {
 			sum +=  Mathf.PerlinNoise(x * gain / frq, y * gain / frq) * amp / gain;
 			gain *= 2.0f;
 		}
+
 		return sum;
 	}
 
-	public void Test () {
-		Vector2 uv = new Vector2();
-		float maxHeight;
-		Texture2D heightMap;
-		List<Vector3> vertices;
-		List<Vector2> uvs;
-		List<Color> cor;
-	}
+    // Terrain
+
+    public void ClearLists () {
+        vertex.Clear();
+        triangles.Clear();
+        normals.Clear();
+        colors.Clear();
+        uvs.Clear();
+    }
+
+
+    public void GenerateProceduralTerrain () {
+        ClearLists();
+        mesh.sharedMesh = new Mesh();
+        mesh.sharedMesh.name = "Procedural Grid";
+
+        CreateVertex();
+
+        if (flat == true)
+            CalculateNormalsFlat();
+        else
+            CalculateNormalsSmooth();
+
+        Debug.Log("Terrain Created");
+    }
+
+
+    private void CreateVertex () {
+        float constante;
+        for (int z = 0; z <= ySize - 1; z++) {
+            for (int x = 0; x <= xSize - 1; x++) {
+                Vector2 uv = new Vector2((float)x / (float)xSize, (float)z / (float)ySize);
+
+                float altura = heightMap.GetPixelBilinear(uv.x, uv.y).grayscale * maxHeight;
+
+                vertex.Add(new Vector3(x, altura, z));
+                uvs.Add(uv);
+
+                if (altura <= maxHeight * 0.45) {
+                    colors.Add(Color.green);
+                } else if (altura > maxHeight * 0.45 && altura <= maxHeight * 0.55) {
+                    constante = (altura - (maxHeight * 0.45f)) * 10;
+                    colors.Add(Color.Lerp(Color.green, Color.red, constante));
+                } else if (altura > maxHeight * 0.55 && altura <= maxHeight * 0.75) {
+                    colors.Add(Color.red);
+                } else if (altura > maxHeight * 0.75 && altura < maxHeight * 0.85) {
+                    constante = (altura - (maxHeight * 0.75f)) * 10;
+                    colors.Add(Color.Lerp(Color.red, Color.blue, constante));
+                } else if (altura > maxHeight * 0.85 && altura <= maxHeight) {
+                    colors.Add(Color.blue);
+                }
+            }
+        }
+
+        mesh.sharedMesh.vertices = vertex.ToArray();
+        mesh.sharedMesh.colors = colors.ToArray();
+        mesh.sharedMesh.uv = uvs.ToArray();
+
+        // Triangles
+        for (int i = 0; i <= (xSize - 1) * (ySize - 1); i++) {
+            if (i % xSize == 0) {
+                triangles.Add(i);
+                triangles.Add(i + xSize);
+                triangles.Add(i + 1);
+            } else if ((i + 1) % xSize == 0) {
+                triangles.Add(i);
+                triangles.Add(i + xSize - 1);
+                triangles.Add(i + xSize);
+            } else {
+                triangles.Add(i);
+                triangles.Add(i + xSize);
+                triangles.Add(i + 1);
+
+                triangles.Add(i);
+                triangles.Add(i + xSize - 1);
+                triangles.Add(i + xSize);
+            }
+        }
+        mesh.sharedMesh.triangles = triangles.ToArray();
+    }
+
+
+    private void CalculateNormalsSmooth () {
+        for (int i = 0; i < vertex.Count; i++) {
+            Vector3 normalMed = new Vector3(0,0,0);
+            int flag = 0;
+
+            for (int j = 0; j < triangles.Count - 3; j += 3) {
+                if (i != triangles[j] && i != triangles[j + 1] && i != triangles[j + 2]) {
+                    continue;
+                }
+
+                Vector3 v1 = vertex[triangles[j + 1]] - vertex[triangles[j]];
+                Vector3 v2 = vertex[triangles[j + 2]] - vertex[triangles[j]];
+
+                Vector3 normal = Vector3.Cross(v1, v2);
+
+                normalMed += normal;
+                flag++;
+            }
+
+            normalMed = normalMed / flag;
+            normalMed.Normalize();
+            normals.Add(normalMed);
+        }
+        mesh.sharedMesh.normals = normals.ToArray();
+        Debug.Log(normals.Count);
+    }
+
+    private void CalculateNormalsFlat () {
+        for (int i = 0; i < vertex.Count - 3; i += 3) {
+            Vector3 normalMed = new Vector3(0,0,0);
+            int flag = 0;
+
+            for (int j = 0; j < triangles.Count - 3; j += 3) {
+                if (i != triangles[j] && i != triangles[j + 1] && i != triangles[j + 2]) {
+                    continue;
+                }
+
+                Vector3 v1 = vertex[triangles[j + 1]] - vertex[triangles[j]];
+                Vector3 v2 = vertex[triangles[j + 2]] - vertex[triangles[j]];
+
+                Vector3 normal = Vector3.Cross(v1, v2);
+
+                normalMed += normal;
+                flag++;
+            }
+
+            normalMed = normalMed/flag;
+            normalMed.Normalize();
+            normals.Add(normalMed);
+            normals.Add(normalMed);
+            normals.Add(normalMed);
+            if (i >= vertex.Count - 5) {
+                normals.Add(normalMed);
+            }
+        }
+        mesh.sharedMesh.normals = normals.ToArray();
+    }
 }
