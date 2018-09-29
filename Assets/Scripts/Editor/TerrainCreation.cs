@@ -6,85 +6,94 @@ using UnityEditor;
 [CanEditMultipleObjects]
 public class TerrainCreation : EditorWindow {
 
-    public int maxHeight;
-    public int xSize;
-    public int ySize;
+    private string[] options = new string[] { "Smooth", "Flat" };
+
+    private int index;
+    private int maxHeight;
+    private int xSize;
+    private int ySize;
     private int gridResolution = 1024;
     private static int octavees = 8;
-    public List<int> triangles = new List<int>();
+    private List<int> triangles = new List<int>();
 
     private static float noiseScale = 1.0f;
     
-    public bool flat;
+    private bool flat;
+    private bool color;
 
-    public List<Vector3> vertices = new List<Vector3>();
-    public List<Vector3> normals = new List<Vector3>();
+    private List<Vector3> vertices = new List<Vector3>();
+    private List<Vector3> normals = new List<Vector3>();
 
-    public List<Vector2> uvs = new List<Vector2>();
+    private List<Vector2> uvs = new List<Vector2>();
 
-    private Color highColor = Color.red;
-    private Color mediumColor = Color.green;
-    private Color lowColor = Color.blue;
+    private Color highColor = Color.blue;
+    private Color mediumColor = Color.red;
+    private Color lowColor = Color.green;
     private Color[] pix;
     public List<Color> colors = new List<Color>();
     
     private static Texture2D noiseTex;
-    public Texture2D heightMap;
+    private Texture2D heightmap;
 
-    public MeshFilter mesh;
+    private MeshFilter mesh;
 
 	[MenuItem("Terrain/Create Terrain...")]
-	static void Init () {
+	private static void Init () {
 		EditorWindow.GetWindow<TerrainCreation>().Show();
 	}
 
-	public void OnGUI () {
-        GUILayout.Label("Texture", EditorStyles.boldLabel);
+	private void OnGUI () {
+        var styleTittle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
 
+        GUILayout.Label("TEXTURE", styleTittle);
 		noiseScale = EditorGUILayout.FloatField("Noise Scale", noiseScale);
-
 		octavees = EditorGUILayout.IntSlider("Number of Octavees", octavees, 0, 8);
-
         if (GUILayout.Button("Create New Texture")) {
             CreateNoiseTexture();
         }
 
-        GUILayout.Label("Terrain", EditorStyles.boldLabel);
-        highColor = EditorGUILayout.ColorField("High Color", highColor);
-        mediumColor = EditorGUILayout.ColorField("Medium Color", mediumColor);
-        lowColor = EditorGUILayout.ColorField("Low Color", lowColor);
-
-        if (GUILayout.Button("Change!")) {
-            ChangeColors();
+        GUILayout.Label("TERRAIN SETTINGS", styleTittle);
+        color = EditorGUILayout.Foldout(color, "Color");
+        if (color) {
+            highColor = EditorGUILayout.ColorField("High Color", highColor);
+            mediumColor = EditorGUILayout.ColorField("Medium Color", mediumColor);
+            lowColor = EditorGUILayout.ColorField("Low Color", lowColor);
         }
-        xSize = EditorGUILayout.IntField("X Size: ", xSize);
-
-        ySize = EditorGUILayout.IntField("Y Size: ", ySize);
-
-        maxHeight = EditorGUILayout.IntSlider("Max Height: ", maxHeight, 1, 100);
-
-        flat = EditorGUILayout.Toggle("Terrain Flat: ", flat);
-        
-        GUILayout.Label("Select Plane: ");
+        xSize = EditorGUILayout.IntField("X Size:", xSize);
+        ySize = EditorGUILayout.IntField("Y Size:", ySize);
+        maxHeight = EditorGUILayout.IntSlider("Max Height:", maxHeight, 1, 100);
+        GUILayout.Label("Type of Terrain:");
+        index = EditorGUILayout.Popup(index, options);
+        switch (index) {
+            case 0:
+                flat = false;
+                break;
+            case 1:
+                flat = true;
+                break;
+            default:
+                Debug.LogError("Unrecognized Option");
+                break;
+        }
+        GUILayout.Label("Select Plane:");
         mesh = (MeshFilter)EditorGUILayout.ObjectField(mesh, typeof(MeshFilter), true);
-        GUILayout.Label("Select HeightMap: ");
-        heightMap = (Texture2D)EditorGUILayout.ObjectField(heightMap, typeof(Texture2D), true);
-        if (GUILayout.Button("Generate Terrain")) {
+        GUILayout.Label("Select Heightmap:");
+        heightmap = (Texture2D)EditorGUILayout.ObjectField(heightmap, typeof(Texture2D), true);
+        
+        EditorGUILayout.LabelField("GENERATE TERRAIN", styleTittle);
+        if (GUILayout.Button("Generate Terrain without Color and Texture")) {
+            mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShader");
             GenerateProceduralTerrain();
         }
-    }
-
-    private void ChangeColors () {
-        if (Selection.activeGameObject)
-            foreach (GameObject t in Selection.gameObjects) {
-                Renderer rend = t.GetComponent<Renderer>();
-
-                if (rend != null) {
-                    rend.sharedMaterial.color = highColor;
-                    rend.sharedMaterial.color = mediumColor;
-                    rend.sharedMaterial.color = lowColor;
-                }
-            }
+        if (GUILayout.Button("Generate Terrain with Color")) {
+            mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShaderColor");
+            GenerateProceduralTerrain();
+        }
+        if (GUILayout.Button("Generate Terrain with Texture")) {
+            mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShaderTexture");
+            Texture();
+            GenerateProceduralTerrain();
+        }
     }
 
     /// <summary>
@@ -108,9 +117,9 @@ public class TerrainCreation : EditorWindow {
         noiseTex.SetPixels(pix);
         noiseTex.Apply();
 		byte[] bytes = noiseTex.EncodeToPNG ();
-		Debug.Log("Creating Terrain Texture: " + Application.dataPath + "/TerrainTexture.png");
-		File.WriteAllBytes(Application.dataPath + "/TerrainTexture.png", bytes);
-		AssetDatabase.ImportAsset("Assets/TerrainTexture.png");
+		Debug.Log("Creating Texture Heightmap: " + Application.dataPath + "/Textures/Heightmap.png");
+		File.WriteAllBytes(Application.dataPath + "/Textures/Heightmap.png", bytes);
+		AssetDatabase.ImportAsset("Assets/Textures/Heightmap.png");
 	}
 
     /// <summary>
@@ -135,7 +144,7 @@ public class TerrainCreation : EditorWindow {
     /// <summary>
     /// Método que reseta tudo
     /// </summary>
-    public void ClearLists () {
+    private  void ClearLists () {
         vertices.Clear();
         triangles.Clear();
         normals.Clear();
@@ -143,10 +152,16 @@ public class TerrainCreation : EditorWindow {
         uvs.Clear();
     }
 
+    private void Texture () {
+        highColor = Color.blue;
+        mediumColor = Color.red;
+        lowColor = Color.green;
+    }
+
     /// <summary>
     /// Método para criar o terreno procedural
     /// </summary>
-    public void GenerateProceduralTerrain () {
+    private void GenerateProceduralTerrain () {
         ClearLists();
         mesh.sharedMesh = new Mesh();
         mesh.sharedMesh.name = "Procedural Grid";
@@ -167,21 +182,21 @@ public class TerrainCreation : EditorWindow {
         for (int z = 0; z <= ySize - 1; z++) {
             for (int x = 0; x <= xSize - 1; x++) {
                 Vector2 uv = new Vector2((float)x / (float)xSize, (float)z / (float)ySize);
-                float height = heightMap.GetPixelBilinear(uv.x, uv.y).grayscale * maxHeight;
+                float height = heightmap.GetPixelBilinear(uv.x, uv.y).grayscale * maxHeight;
                 vertices.Add(new Vector3(x, height, z));
                 uvs.Add(uv);
                 if (height <= maxHeight * 0.45) {
-                    colors.Add(Color.green);
+                    colors.Add(lowColor);
                 } else if (height > maxHeight * 0.45 && height <= maxHeight * 0.55) {
                     constant = (height - (maxHeight * 0.45f)) * 10;
-                    colors.Add(Color.Lerp(Color.green, Color.red, constant));
+                    colors.Add(Color.Lerp(lowColor, mediumColor, constant));
                 } else if (height > maxHeight * 0.55 && height <= maxHeight * 0.75) {
-                    colors.Add(Color.red);
+                    colors.Add(mediumColor);
                 } else if (height > maxHeight * 0.75 && height < maxHeight * 0.85) {
                     constant = (height - (maxHeight * 0.75f)) * 10;
-                    colors.Add(Color.Lerp(Color.red, Color.blue, constant));
+                    colors.Add(Color.Lerp(mediumColor, highColor, constant));
                 } else if (height > maxHeight * 0.85 && height <= maxHeight) {
-                    colors.Add(Color.blue);
+                    colors.Add(highColor);
                 }
             }
         }
@@ -275,7 +290,7 @@ public class TerrainCreation : EditorWindow {
                 normalMed += normal;
                 flag++;
             }
-            normalMed = normalMed/flag;
+            normalMed = normalMed / flag;
             normalMed.Normalize();
             normals.Add(normalMed);
             normals.Add(normalMed);

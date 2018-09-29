@@ -114,7 +114,7 @@ Material:
     - _DstBlend: 0
     - _Exposure: 1.39
     - _GlossMapScale: 0.62
-    - _Glossiness: 0.195
+    - _Glossiness: 0.217
     - _GlossyReflections: 1
     - _GrassHeight: 46.06
     - _MaxHeight: 38.49
