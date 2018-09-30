@@ -6,14 +6,13 @@ using UnityEditor;
 [CanEditMultipleObjects]
 public class TerrainCreation : EditorWindow {
 
-    private string[] options = new string[] { "Smooth", "Flat" };
-    private string error = "";
+    private enum options { Smooth, Flat }
+    private options mode;
     
-    private int index;
     private int maxHeight;
     private int xSize;
     private int ySize;
-    private int gridResolution = 1024;
+    private int textureResolution = 1024;
     private static int octavees = 8;
     private List<int> triangles = new List<int>();
 
@@ -32,12 +31,19 @@ public class TerrainCreation : EditorWindow {
     private Color lowColor = Color.green;
     private Color[] pix;
     public List<Color> colors = new List<Color>();
-    
-    private static Texture2D noiseTex;
+
     private Texture2D heightmap;
+    private static Texture2D noiseTex;
 
     private MeshFilter mesh;
 
+    // Internal
+    //private GameObject terrain;
+    //private Material plane;
+
+    /// <summary>
+    /// Terrain editor startup method
+    /// </summary>
 	[MenuItem("Terrain/Create Terrain...")]
 	private static void Init () {
 		EditorWindow.GetWindow<TerrainCreation>().Show();
@@ -49,78 +55,77 @@ public class TerrainCreation : EditorWindow {
 	private void OnGUI () {
         var styleTittle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
 
-        GUILayout.Label("TEXTURE", styleTittle);
-		noiseScale = EditorGUILayout.FloatField("Noise Scale", noiseScale);
-		octavees = EditorGUILayout.IntSlider("Number of Octavees", octavees, 0, 8);
+        GUILayout.Label("TEXTURE SETTINGS", styleTittle);
+		noiseScale = EditorGUILayout.FloatField("Noise Scale:", noiseScale);
+		octavees = EditorGUILayout.IntSlider("Number of Octavees:", octavees, 0, 8);
+        this.textureResolution = EditorGUILayout.IntField("Texture Resolution:", this.textureResolution);
+        heightmap = (Texture2D)EditorGUILayout.ObjectField("Select Heightmap:", heightmap, typeof(Texture2D), true);
         if (GUILayout.Button("Create New Texture")) {
             CreateNoiseTexture();
+            heightmap = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/Heightmap.png");
+            /*terrain = (GameObject)FindObjectOfType(typeof(GameObject));
+            plane = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Terrain");
+            if (terrain) {
+                terrain = GameObject.CreatePrimitive(PrimitiveType.Plane);
+                terrain.transform.position = new Vector3(0, 0, 0);
+                if (!terrain.GetComponent<Material>()) {
+                    terrain.GetComponent<MeshRenderer>().material = plane;
+                    Debug.Log("Renderer");
+                }
+            }*/
         }
 
+        EditorGUILayout.Separator();
+        GUILayout.Label("COLOR SETTINGS", styleTittle);
+        highColor = EditorGUILayout.ColorField("High Color:", highColor);
+        mediumColor = EditorGUILayout.ColorField("Medium Color:", mediumColor);
+        lowColor = EditorGUILayout.ColorField("Low Color:", lowColor);
+
+        EditorGUILayout.Separator();
         GUILayout.Label("TERRAIN SETTINGS", styleTittle);
-        color = EditorGUILayout.Foldout(color, "Color");
-        if (color) {
-            highColor = EditorGUILayout.ColorField("High Color", highColor);
-            mediumColor = EditorGUILayout.ColorField("Medium Color", mediumColor);
-            lowColor = EditorGUILayout.ColorField("Low Color", lowColor);
-        }
+        mesh = (MeshFilter)EditorGUILayout.ObjectField("Select Plane:", mesh, typeof(MeshFilter), true);
         xSize = EditorGUILayout.IntField("X Size:", xSize);
         ySize = EditorGUILayout.IntField("Y Size:", ySize);
         maxHeight = EditorGUILayout.IntSlider("Max Height:", maxHeight, 1, 100);
-        GUILayout.Label("Type of Terrain:");
-        index = EditorGUILayout.Popup(index, options);
-        switch (index) {
-            case 0:
+        mode = (options)EditorGUILayout.EnumPopup("Type of Terrain:", mode);
+        switch (mode) {
+            case options.Smooth:
                 flat = false;
                 break;
-            case 1:
+            case options.Flat:
                 flat = true;
                 break;
             default:
                 Debug.LogError("Unrecognized Option");
                 break;
         }
-        GUILayout.Label("Select Plane:");
-        mesh = (MeshFilter)EditorGUILayout.ObjectField(mesh, typeof(MeshFilter), true);
-        GUILayout.Label("Select Heightmap:");
-        heightmap = (Texture2D)EditorGUILayout.ObjectField(heightmap, typeof(Texture2D), true);
-        
+
+        EditorGUILayout.Separator();
         EditorGUILayout.LabelField("GENERATE TERRAIN", styleTittle);
         if (GUILayout.Button("Generate Terrain without Color and Texture")) {
             mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShader");
-            GenerateProceduralTerrain();
+            GenerateTerrain();
             SaveMesh("Basic");
         }
         if (GUILayout.Button("Generate Terrain with Color")) {
             mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShaderColor");
-            GenerateProceduralTerrain();
+            GenerateTerrain();
             SaveMesh("Color");
         }
         if (GUILayout.Button("Generate Terrain with Texture")) {
             mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShaderTexture");
             Texture();
-            GenerateProceduralTerrain();
+            GenerateTerrain();
             SaveMesh("Texture");
         }
-        //Transform curr = Selection.activeTransform;
-         GUILayout.Label ("Creates a clone of the game object where the triangles\n" + 
-             "do not share vertices");
-         GUILayout.Space(20);
- 
-         if (GUILayout.Button ("Process")) {
-             error = "";
-             NoShared();
-         }
-         
-         GUILayout.Space(20);
-         GUILayout.Label(error);
     }
 
     /// <summary>
     /// Method to create noise texture
     /// </summary>
 	private void CreateNoiseTexture () {
-		noiseTex = new Texture2D(gridResolution, gridResolution);
-		pix = new Color[gridResolution * gridResolution];
+		noiseTex = new Texture2D(textureResolution, textureResolution);
+		pix = new Color[textureResolution * textureResolution];
 		float xOri = Random.value * 100000.0f;
 		float yOri = Random.value * 100000.0f;
 		float y = 0.0f;
@@ -191,16 +196,15 @@ public class TerrainCreation : EditorWindow {
     }
 
     /// <summary>
-    /// Method to create procedural terrain
+    /// Method to create terrain
     /// </summary>
-    private void GenerateProceduralTerrain () {
+    private void GenerateTerrain () {
         ClearLists();
         mesh.sharedMesh = new Mesh();
-        mesh.sharedMesh.name = "Procedural Grid";
+        mesh.sharedMesh.name = "Procedural Mesh";
         CreateVertices();
         if (flat) {
-            //CalculateNormalsFlat();
-            NoShared();
+            CalculateNormalsFlat();
         } else {
             CalculateNormalsSmooth();
         }
@@ -208,7 +212,7 @@ public class TerrainCreation : EditorWindow {
     }
 
     /// <summary>
-    /// Método para criar os vértices
+    /// Method for creating the vertices
     /// </summary>
     private void CreateVertices () {
         float constant;
@@ -258,28 +262,6 @@ public class TerrainCreation : EditorWindow {
         mesh.sharedMesh.triangles = triangles.ToArray();
     }
 
-    /*void CreateVertex () {
-        List<Vector3> n;
-        List<Vector3> v;
-        List<int> i;
-        for (int x = 0; x < max - 1; x++) {
-            for (int z = 0; z < max - 1; z++) {
-                Vector3 v1 = new Vector3(x, 0, 2);
-                Vector3 v1 = new Vector3(x, 0, 2 + 1);
-                Vector3 v2 = new Vector3(x, 0, 2 + 1);
-                Vector3 v3 = new Vector3(x, 0, 2 + 1);
-                int index > v.
-
-                v.Add(v1);
-                v.Add(v2);
-                v.Add(v3);
-                i.Add(index + 1);
-                i.Add(index + 2);
-                i.Add(index + 3);
-            }
-        }
-    }*/
-
     /// <summary>
     /// Method for calculating normal smooth
     /// </summary>
@@ -293,7 +275,7 @@ public class TerrainCreation : EditorWindow {
                 }
                 Vector3 v1 = vertices[triangles[j + 1]] - vertices[triangles[j]];
                 Vector3 v2 = vertices[triangles[j + 2]] - vertices[triangles[j]];
-                Vector3 normal = Vector3.Cross(v1, v2);
+                Vector3 normal = Math.CrossProduct(v1, v2);
                 normalMed += normal;
                 flag++;
             }
@@ -302,23 +284,6 @@ public class TerrainCreation : EditorWindow {
             normals.Add(normalMed);
         }
         mesh.sharedMesh.normals = normals.ToArray();
-    }
-
-    /// <summary>
-    /// Method for calculating normal flat
-    /// </summary>
-    private void NoShared () {
-        Vector3[] oldVerts = mesh.sharedMesh.vertices;
-        int[] triangles = mesh.sharedMesh.triangles;
-        Vector3[] vertices = new Vector3[triangles.Length];
-        for (int i = 0; i < triangles.Length; i++) {
-            vertices[i] = oldVerts[triangles[i]];
-            triangles[i] = i;
-        }
-        mesh.sharedMesh.vertices = vertices;
-        mesh.sharedMesh.triangles = triangles;
-        mesh.sharedMesh.RecalculateBounds();
-        mesh.sharedMesh.RecalculateNormals();
     }
     
     /// <summary>
@@ -334,7 +299,7 @@ public class TerrainCreation : EditorWindow {
                 }
                 Vector3 v1 = vertices[triangles[j + 1]] - vertices[triangles[j]];
                 Vector3 v2 = vertices[triangles[j + 2]] - vertices[triangles[j]];
-                Vector3 normal = Vector3.Cross(v1, v2);
+                Vector3 normal = Math.CrossProduct(v1, v2);
                 normalMed += normal;
                 flag++;
             }
