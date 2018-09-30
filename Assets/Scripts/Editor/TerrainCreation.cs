@@ -8,7 +8,7 @@ public class TerrainCreation : EditorWindow {
 
     private enum options { Smooth, Flat }
     private options mode;
-    
+
     private int maxHeight;
     private int xSize;
     private int ySize;
@@ -20,6 +20,8 @@ public class TerrainCreation : EditorWindow {
     
     private bool flat;
     private bool color;
+
+    private GameObject terrain;
 
     private List<Vector3> vertices = new List<Vector3>();
     private List<Vector3> normals = new List<Vector3>();
@@ -35,11 +37,9 @@ public class TerrainCreation : EditorWindow {
     private Texture2D heightmap;
     private static Texture2D noiseTex;
 
-    private MeshFilter mesh;
+    private Material material;
 
-    // Internal
-    //private GameObject terrain;
-    //private Material plane;
+    //private MeshFilter terrain;
 
     /// <summary>
     /// Terrain editor startup method
@@ -58,21 +58,13 @@ public class TerrainCreation : EditorWindow {
         GUILayout.Label("TEXTURE SETTINGS", styleTittle);
 		noiseScale = EditorGUILayout.FloatField("Noise Scale:", noiseScale);
 		octavees = EditorGUILayout.IntSlider("Number of Octavees:", octavees, 0, 8);
-        this.textureResolution = EditorGUILayout.IntField("Texture Resolution:", this.textureResolution);
+        textureResolution = EditorGUILayout.IntField("Texture Resolution:", textureResolution);
         heightmap = (Texture2D)EditorGUILayout.ObjectField("Select Heightmap:", heightmap, typeof(Texture2D), true);
+        if (!heightmap) {
+            LoadHeightmap();
+        }
         if (GUILayout.Button("Create New Texture")) {
             CreateNoiseTexture();
-            heightmap = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/Heightmap.png");
-            /*terrain = (GameObject)FindObjectOfType(typeof(GameObject));
-            plane = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Terrain");
-            if (terrain) {
-                terrain = GameObject.CreatePrimitive(PrimitiveType.Plane);
-                terrain.transform.position = new Vector3(0, 0, 0);
-                if (!terrain.GetComponent<Material>()) {
-                    terrain.GetComponent<MeshRenderer>().material = plane;
-                    Debug.Log("Renderer");
-                }
-            }*/
         }
 
         EditorGUILayout.Separator();
@@ -83,7 +75,6 @@ public class TerrainCreation : EditorWindow {
 
         EditorGUILayout.Separator();
         GUILayout.Label("TERRAIN SETTINGS", styleTittle);
-        mesh = (MeshFilter)EditorGUILayout.ObjectField("Select Plane:", mesh, typeof(MeshFilter), true);
         xSize = EditorGUILayout.IntField("X Size:", xSize);
         ySize = EditorGUILayout.IntField("Y Size:", ySize);
         maxHeight = EditorGUILayout.IntSlider("Max Height:", maxHeight, 1, 100);
@@ -102,21 +93,29 @@ public class TerrainCreation : EditorWindow {
 
         EditorGUILayout.Separator();
         EditorGUILayout.LabelField("GENERATE TERRAIN", styleTittle);
+        EditorGUI.BeginDisabledGroup(!heightmap);
         if (GUILayout.Button("Generate Terrain without Color and Texture")) {
-            mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShader");
             GenerateTerrain();
+            terrain.GetComponent<MeshRenderer>().sharedMaterial.shader = Shader.Find("Custom/TerrainShader");
             SaveMesh("Basic");
         }
         if (GUILayout.Button("Generate Terrain with Color")) {
-            mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShaderColor");
             GenerateTerrain();
+            terrain.GetComponent<MeshRenderer>().sharedMaterial.shader = Shader.Find("Custom/TerrainShaderColor");
             SaveMesh("Color");
         }
         if (GUILayout.Button("Generate Terrain with Texture")) {
-            mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShaderTexture");
             Texture();
             GenerateTerrain();
+            terrain.GetComponent<MeshRenderer>().sharedMaterial.shader = Shader.Find("Custom/TerrainShaderTexture");
             SaveMesh("Texture");
+        }
+        EditorGUI.EndDisabledGroup();
+        GUILayout.Space(10);
+        if (!heightmap) {
+            GUILayout.Label("CREATE A NEW TEXTURE", styleTittle);
+        } else {
+            GUILayout.Label("");
         }
     }
 
@@ -165,13 +164,23 @@ public class TerrainCreation : EditorWindow {
 		return sum;
 	}
 
+    private void CreateMesh () {
+        material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Terrain.mat");
+        if (!terrain && !(terrain = GameObject.Find("Terrain"))) {
+            terrain = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            terrain.transform.position = new Vector3(0, 0, 0);
+            terrain.name = "Terrain";
+            terrain.GetComponent<MeshRenderer>().sharedMaterial = material;
+        }
+    }
+
     /// <summary>
     /// Method to save the terrain mesh
     /// </summary>
     /// <param name="type">Type of terrain</param>
     private void SaveMesh (string type) {
         string name = "Assets/Meshs/" + type + ".asset";
-        AssetDatabase.CreateAsset(mesh.sharedMesh, name);
+        AssetDatabase.CreateAsset(terrain.GetComponent<MeshFilter>().sharedMesh, name);
         AssetDatabase.SaveAssets();
     }
 
@@ -195,13 +204,18 @@ public class TerrainCreation : EditorWindow {
         lowColor = Color.green;
     }
 
+    private void LoadHeightmap () {
+        heightmap = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/Heightmap.png");
+    }
+
     /// <summary>
     /// Method to create terrain
     /// </summary>
     private void GenerateTerrain () {
         ClearLists();
-        mesh.sharedMesh = new Mesh();
-        mesh.sharedMesh.name = "Procedural Mesh";
+        CreateMesh();
+        terrain.GetComponent<MeshFilter>().sharedMesh = new Mesh();
+        terrain.GetComponent<MeshFilter>().sharedMesh.name = "Procedural Mesh";
         CreateVertices();
         if (flat) {
             CalculateNormalsFlat();
@@ -237,9 +251,9 @@ public class TerrainCreation : EditorWindow {
                 }
             }
         }
-        mesh.sharedMesh.vertices = vertices.ToArray();
-        mesh.sharedMesh.colors = colors.ToArray();
-        mesh.sharedMesh.uv = uvs.ToArray();
+        terrain.GetComponent<MeshFilter>().sharedMesh.vertices = vertices.ToArray();
+        terrain.GetComponent<MeshFilter>().sharedMesh.colors = colors.ToArray();
+        terrain.GetComponent<MeshFilter>().sharedMesh.uv = uvs.ToArray();
         for (int i = 0; i <= (xSize - 1) * (ySize - 1); i++) {
             if (i % xSize == 0) {
                 triangles.Add(i);
@@ -259,7 +273,7 @@ public class TerrainCreation : EditorWindow {
                 triangles.Add(i + xSize);
             }
         }
-        mesh.sharedMesh.triangles = triangles.ToArray();
+        terrain.GetComponent<MeshFilter>().sharedMesh.triangles = triangles.ToArray();
     }
 
     /// <summary>
@@ -283,7 +297,7 @@ public class TerrainCreation : EditorWindow {
             normalMed.Normalize();
             normals.Add(normalMed);
         }
-        mesh.sharedMesh.normals = normals.ToArray();
+        terrain.GetComponent<MeshFilter>().sharedMesh.normals = normals.ToArray();
     }
     
     /// <summary>
@@ -312,6 +326,6 @@ public class TerrainCreation : EditorWindow {
                 normals.Add(normalMed);
             }
         }
-        mesh.sharedMesh.normals = normals.ToArray();
+        terrain.GetComponent<MeshFilter>().sharedMesh.normals = normals.ToArray();
     }
 }
