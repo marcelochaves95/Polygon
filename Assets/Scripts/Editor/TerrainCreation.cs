@@ -39,8 +39,6 @@ public class TerrainCreation : EditorWindow {
 
     private Material material;
 
-    //private MeshFilter terrain;
-
     /// <summary>
     /// Terrain editor startup method
     /// </summary>
@@ -53,9 +51,9 @@ public class TerrainCreation : EditorWindow {
     /// Inspector configuration method
     /// </summary>
 	private void OnGUI () {
-        var styleTittle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
+        var centralizedWords = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
 
-        GUILayout.Label("TEXTURE SETTINGS", styleTittle);
+        GUILayout.Label("TEXTURE SETTINGS", centralizedWords);
 		noiseScale = EditorGUILayout.FloatField("Noise Scale:", noiseScale);
 		octavees = EditorGUILayout.IntSlider("Number of Octavees:", octavees, 0, 8);
         textureResolution = EditorGUILayout.IntField("Texture Resolution:", textureResolution);
@@ -68,13 +66,13 @@ public class TerrainCreation : EditorWindow {
         }
 
         EditorGUILayout.Separator();
-        GUILayout.Label("COLOR SETTINGS", styleTittle);
+        GUILayout.Label("COLOR SETTINGS", centralizedWords);
         highColor = EditorGUILayout.ColorField("High Color:", highColor);
         mediumColor = EditorGUILayout.ColorField("Medium Color:", mediumColor);
         lowColor = EditorGUILayout.ColorField("Low Color:", lowColor);
 
         EditorGUILayout.Separator();
-        GUILayout.Label("TERRAIN SETTINGS", styleTittle);
+        GUILayout.Label("TERRAIN SETTINGS", centralizedWords);
         xSize = EditorGUILayout.IntField("X Size:", xSize);
         ySize = EditorGUILayout.IntField("Y Size:", ySize);
         maxHeight = EditorGUILayout.IntSlider("Max Height:", maxHeight, 1, 100);
@@ -92,7 +90,7 @@ public class TerrainCreation : EditorWindow {
         }
 
         EditorGUILayout.Separator();
-        EditorGUILayout.LabelField("GENERATE TERRAIN", styleTittle);
+        EditorGUILayout.LabelField("GENERATE TERRAIN", centralizedWords);
         EditorGUI.BeginDisabledGroup(!heightmap);
         if (GUILayout.Button("Generate Terrain without Color and Texture")) {
             GenerateTerrain();
@@ -111,9 +109,10 @@ public class TerrainCreation : EditorWindow {
             SaveMesh("Texture");
         }
         EditorGUI.EndDisabledGroup();
+        
         GUILayout.Space(10);
         if (!heightmap) {
-            GUILayout.Label("CREATE A NEW TEXTURE", styleTittle);
+            GUILayout.Label("CREATE A NEW TEXTURE", centralizedWords);
         } else {
             GUILayout.Label("");
         }
@@ -205,6 +204,8 @@ public class TerrainCreation : EditorWindow {
     }
 
     private void LoadHeightmap () {
+        TextureImporter importer = AssetImporter.GetAtPath("Assets/Textures/Heightmap.png") as TextureImporter;
+        importer.isReadable = true;
         heightmap = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/Heightmap.png");
     }
 

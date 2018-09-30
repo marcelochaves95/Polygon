@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_Name: Terrain
-  m_Shader: {fileID: 4800000, guid: ea40fff8233b6dd4e9e03f44e1046249, type: 3}
+  m_Shader: {fileID: 4800000, guid: 27143008e5d3f1f40a61692e8c0c0771, type: 3}
   m_ShaderKeywords: _EMISSION _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A _SUNDISK_HIGH_QUALITY
   m_LightmapFlags: 1
   m_EnableInstancingVariants: 0
