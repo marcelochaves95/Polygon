@@ -7,7 +7,8 @@ using UnityEditor;
 public class TerrainCreation : EditorWindow {
 
     private string[] options = new string[] { "Smooth", "Flat" };
-
+    private string error = "";
+    
     private int index;
     private int maxHeight;
     private int xSize;
@@ -42,6 +43,9 @@ public class TerrainCreation : EditorWindow {
 		EditorWindow.GetWindow<TerrainCreation>().Show();
 	}
 
+    /// <summary>
+    /// Inspector configuration method
+    /// </summary>
 	private void OnGUI () {
         var styleTittle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
 
@@ -84,20 +88,35 @@ public class TerrainCreation : EditorWindow {
         if (GUILayout.Button("Generate Terrain without Color and Texture")) {
             mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShader");
             GenerateProceduralTerrain();
+            SaveMesh("Basic");
         }
         if (GUILayout.Button("Generate Terrain with Color")) {
             mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShaderColor");
             GenerateProceduralTerrain();
+            SaveMesh("Color");
         }
         if (GUILayout.Button("Generate Terrain with Texture")) {
             mesh.GetComponent<Renderer>().material.shader = Shader.Find("Custom/TerrainShaderTexture");
             Texture();
             GenerateProceduralTerrain();
+            SaveMesh("Texture");
         }
+        //Transform curr = Selection.activeTransform;
+         GUILayout.Label ("Creates a clone of the game object where the triangles\n" + 
+             "do not share vertices");
+         GUILayout.Space(20);
+ 
+         if (GUILayout.Button ("Process")) {
+             error = "";
+             NoShared();
+         }
+         
+         GUILayout.Space(20);
+         GUILayout.Label(error);
     }
 
     /// <summary>
-    /// Método para criar o noise texture
+    /// Method to create noise texture
     /// </summary>
 	private void CreateNoiseTexture () {
 		noiseTex = new Texture2D(gridResolution, gridResolution);
@@ -123,14 +142,14 @@ public class TerrainCreation : EditorWindow {
 	}
 
     /// <summary>
-    /// Método para criar o octavees noise 2D
+    /// Method for creating octavees noise 2D
     /// </summary>
     /// <param name="x">X</param>
     /// <param name="y">Y</param>
-    /// <param name="octNum">Número de octavees</param>
-    /// <param name="frq">frquência</param>
+    /// <param name="octNum">Number of octavees</param>
+    /// <param name="frq">Frequency</param>
     /// <param name="amp">Amplitude</param>
-    /// <returns>Valor do perlin noise</returns>
+    /// <returns>Value of perlin noise</returns>
 	public float OctaveesNoise2D (float x, float y, int octNum, float frq, float amp) {
 		float gain = 1.0f;
 		float sum = 0.0f;
@@ -142,9 +161,19 @@ public class TerrainCreation : EditorWindow {
 	}
 
     /// <summary>
-    /// Método que reseta tudo
+    /// Method to save the terrain mesh
     /// </summary>
-    private  void ClearLists () {
+    /// <param name="type">Type of terrain</param>
+    private void SaveMesh (string type) {
+        string name = "Assets/Meshs/" + type + ".asset";
+        AssetDatabase.CreateAsset(mesh.sharedMesh, name);
+        AssetDatabase.SaveAssets();
+    }
+
+    /// <summary>
+    /// Method that cleans everything
+    /// </summary>
+    private void ClearLists () {
         vertices.Clear();
         triangles.Clear();
         normals.Clear();
@@ -152,6 +181,9 @@ public class TerrainCreation : EditorWindow {
         uvs.Clear();
     }
 
+    /// <summary>
+    /// Method to set colors
+    /// </summary>
     private void Texture () {
         highColor = Color.blue;
         mediumColor = Color.red;
@@ -159,7 +191,7 @@ public class TerrainCreation : EditorWindow {
     }
 
     /// <summary>
-    /// Método para criar o terreno procedural
+    /// Method to create procedural terrain
     /// </summary>
     private void GenerateProceduralTerrain () {
         ClearLists();
@@ -167,7 +199,8 @@ public class TerrainCreation : EditorWindow {
         mesh.sharedMesh.name = "Procedural Grid";
         CreateVertices();
         if (flat) {
-            CalculateNormalsFlat();
+            //CalculateNormalsFlat();
+            NoShared();
         } else {
             CalculateNormalsSmooth();
         }
@@ -175,7 +208,7 @@ public class TerrainCreation : EditorWindow {
     }
 
     /// <summary>
-    /// Método para criar a malha
+    /// Método para criar os vértices
     /// </summary>
     private void CreateVertices () {
         float constant;
@@ -225,14 +258,12 @@ public class TerrainCreation : EditorWindow {
         mesh.sharedMesh.triangles = triangles.ToArray();
     }
 
-    /*void CreateMeshRenato () {
+    /*void CreateVertex () {
         List<Vector3> n;
         List<Vector3> v;
         List<int> i;
-        for (int x = 0; x < max - 1; x++)
-        {
-            for (int z = 0; z < max - 1; z++)
-            {
+        for (int x = 0; x < max - 1; x++) {
+            for (int z = 0; z < max - 1; z++) {
                 Vector3 v1 = new Vector3(x, 0, 2);
                 Vector3 v1 = new Vector3(x, 0, 2 + 1);
                 Vector3 v2 = new Vector3(x, 0, 2 + 1);
@@ -250,7 +281,7 @@ public class TerrainCreation : EditorWindow {
     }*/
 
     /// <summary>
-    /// Método para calcular as normais smooth
+    /// Method for calculating normal smooth
     /// </summary>
     private void CalculateNormalsSmooth () {
         for (int i = 0; i < vertices.Count; i++) {
@@ -274,7 +305,24 @@ public class TerrainCreation : EditorWindow {
     }
 
     /// <summary>
-    /// Método para calcular as normais flat
+    /// Method for calculating normal flat
+    /// </summary>
+    private void NoShared () {
+        Vector3[] oldVerts = mesh.sharedMesh.vertices;
+        int[] triangles = mesh.sharedMesh.triangles;
+        Vector3[] vertices = new Vector3[triangles.Length];
+        for (int i = 0; i < triangles.Length; i++) {
+            vertices[i] = oldVerts[triangles[i]];
+            triangles[i] = i;
+        }
+        mesh.sharedMesh.vertices = vertices;
+        mesh.sharedMesh.triangles = triangles;
+        mesh.sharedMesh.RecalculateBounds();
+        mesh.sharedMesh.RecalculateNormals();
+    }
+    
+    /// <summary>
+    /// Method for calculating normal flat
     /// </summary>
     private void CalculateNormalsFlat () {
         for (int i = 0; i < vertices.Count - 3; i += 3) {
