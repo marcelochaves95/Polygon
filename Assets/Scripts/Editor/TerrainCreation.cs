@@ -108,7 +108,7 @@ public class TerrainCreation : EditorWindow {
         }
         EditorGUI.EndDisabledGroup();
         
-        GUILayout.Space(10);
+        GUILayout.Space(15);
         if (!heightmap) {
             GUILayout.Label("CREATE A NEW TEXTURE", centralizedWords);
         } else {
