@@ -10,13 +10,11 @@ public class TerrainCreation : EditorWindow {
     private options mode;
 
     private int maxHeight;
-    private int xSize;
-    private int ySize;
+    private int xSize = 1;
+    private int ySize = 1;
     private int textureResolution = 1024;
     private static int octavees = 8;
     private List<int> triangles = new List<int>();
-
-    private static float noiseScale = 1.0f;
     
     private bool flat;
     private bool color;
@@ -55,7 +53,6 @@ public class TerrainCreation : EditorWindow {
         var centralizedWords = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
 
         GUILayout.Label("TEXTURE SETTINGS", centralizedWords);
-		noiseScale = EditorGUILayout.FloatField("Noise Scale:", noiseScale);
 		octavees = EditorGUILayout.IntSlider("Number of Octavees:", octavees, 0, 8);
         textureResolution = EditorGUILayout.IntField("Texture Resolution:", textureResolution);
         heightmap = (Texture2D)EditorGUILayout.ObjectField("Select Heightmap:", heightmap, typeof(Texture2D), true);
@@ -290,7 +287,6 @@ public class TerrainCreation : EditorWindow {
                 triangles.Add(i);
                 triangles.Add(i + xSize);
                 triangles.Add(i + 1);
-
                 triangles.Add(i);
                 triangles.Add(i + xSize - 1);
                 triangles.Add(i + xSize);
