@@ -28,9 +28,9 @@ public class TerrainCreation : EditorWindow {
 
     private List<Vector2> uvs = new List<Vector2>();
 
-    private Color highColor = Color.blue;
-    private Color mediumColor = Color.red;
-    private Color lowColor = Color.green;
+    private Color topColor = Color.blue;
+    private Color middleColor = Color.red;
+    private Color bottomColor = Color.green;
     private Color[] pix;
     public List<Color> colors = new List<Color>();
 
@@ -68,9 +68,9 @@ public class TerrainCreation : EditorWindow {
 
         EditorGUILayout.Separator();
         GUILayout.Label("COLOR SETTINGS", centralizedWords);
-        highColor = EditorGUILayout.ColorField("High Color:", highColor);
-        mediumColor = EditorGUILayout.ColorField("Medium Color:", mediumColor);
-        lowColor = EditorGUILayout.ColorField("Low Color:", lowColor);
+        topColor = EditorGUILayout.ColorField("Top Color:", topColor);
+        middleColor = EditorGUILayout.ColorField("Middle Color:", middleColor);
+        bottomColor = EditorGUILayout.ColorField("Bottom Color:", bottomColor);
 
         EditorGUILayout.Separator();
         GUILayout.Label("TERRAIN SETTINGS", centralizedWords);
@@ -120,55 +120,6 @@ public class TerrainCreation : EditorWindow {
     }
     #endregion
 
-    #region Settings
-    /// <summary>
-    /// Method to save the terrain mesh
-    /// </summary>
-    /// <param name="type">Type of terrain</param>
-    private void SaveMesh (string type) {
-        string name = "Assets/Meshs/" + type + ".asset";
-        AssetDatabase.CreateAsset(terrain.GetComponent<MeshFilter>().sharedMesh, name);
-        AssetDatabase.SaveAssets();
-    }
-
-    /// <summary>
-    /// Method to set colors
-    /// </summary>
-    private void Texture () {
-        highColor = Color.blue;
-        mediumColor = Color.red;
-        lowColor = Color.green;
-    }
-
-    private void TextureIsRead(Texture2D heightmap, bool isReadable) {
-        if (heightmap == null) {
-            return;
-        }
-        string assetPath = AssetDatabase.GetAssetPath(heightmap);
-        TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-        if (importer != null) {
-            importer.isReadable = isReadable;
-            AssetDatabase.ImportAsset(assetPath);
-            AssetDatabase.Refresh();
-        }
-    }
-
-    private void LoadHeightmap () {
-        heightmap = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/Heightmap.png");
-    }
-
-    /// <summary>
-    /// Method that cleans everything
-    /// </summary>
-    private void ClearLists () {
-        vertices.Clear();
-        triangles.Clear();
-        normals.Clear();
-        colors.Clear();
-        uvs.Clear();
-    }
-    #endregion
-
     #region Texture
     /// <summary>
     /// Method to create noise texture
@@ -214,9 +165,41 @@ public class TerrainCreation : EditorWindow {
 		}
 		return sum;
 	}
-    #endregion
 
-    
+    /// <summary>
+    /// Method to load heightmap texture
+    /// </summary>
+    private void LoadHeightmap () {
+        heightmap = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/Heightmap.png");
+    }
+
+    /// <summary>
+    /// Method to set texture's Read/Write option to true
+    /// </summary>
+    /// <param name="heightmap">Heighmap</param>
+    /// <param name="isReadable">If you can read</param>
+    private void TextureIsRead(Texture2D heightmap, bool isReadable) {
+        if (heightmap == null) {
+            return;
+        }
+        string assetPath = AssetDatabase.GetAssetPath(heightmap);
+        TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+        if (importer != null) {
+            importer.isReadable = isReadable;
+            AssetDatabase.ImportAsset(assetPath);
+            AssetDatabase.Refresh();
+        }
+    }
+
+    /// <summary>
+    /// Method to set colors
+    /// </summary>
+    private void Texture () {
+        topColor = Color.blue;
+        middleColor = Color.red;
+        bottomColor = Color.green;
+    }
+    #endregion
 
     #region Creation
     /// <summary>
@@ -236,6 +219,9 @@ public class TerrainCreation : EditorWindow {
         Debug.Log("Terrain Created");
     }
 
+    /// <summary>
+    /// Method for creating the terrain base mesh
+    /// </summary>
     private void CreateMesh () {
         material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Terrain.mat");
         if (!terrain && !(terrain = GameObject.Find("Terrain"))) {
@@ -244,6 +230,16 @@ public class TerrainCreation : EditorWindow {
             terrain.name = "Terrain";
             terrain.GetComponent<MeshRenderer>().sharedMaterial = material;
         }
+    }
+
+    /// <summary>
+    /// Method to save the terrain mesh
+    /// </summary>
+    /// <param name="type">Type of terrain</param>
+    private void SaveMesh (string type) {
+        string name = "Assets/Meshs/" + type + ".asset";
+        AssetDatabase.CreateAsset(terrain.GetComponent<MeshFilter>().sharedMesh, name);
+        AssetDatabase.SaveAssets();
     }
 
     /// <summary>
@@ -264,17 +260,17 @@ public class TerrainCreation : EditorWindow {
                 vertices.Add(new Vector3(x, height, z));
                 uvs.Add(uv);
                 if (height <= maxHeight * 0.45) {
-                    colors.Add(lowColor);
+                    colors.Add(bottomColor);
                 } else if (height > maxHeight * 0.45 && height <= maxHeight * 0.55) {
                     constant = (height - (maxHeight * 0.45f)) * 10;
-                    colors.Add(Color.Lerp(lowColor, mediumColor, constant));
+                    colors.Add(Color.Lerp(bottomColor, middleColor, constant));
                 } else if (height > maxHeight * 0.55 && height <= maxHeight * 0.75) {
-                    colors.Add(mediumColor);
+                    colors.Add(middleColor);
                 } else if (height > maxHeight * 0.75 && height < maxHeight * 0.85) {
                     constant = (height - (maxHeight * 0.75f)) * 10;
-                    colors.Add(Color.Lerp(mediumColor, highColor, constant));
+                    colors.Add(Color.Lerp(middleColor, topColor, constant));
                 } else if (height > maxHeight * 0.85 && height <= maxHeight) {
-                    colors.Add(highColor);
+                    colors.Add(topColor);
                 }
             }
         }
@@ -301,6 +297,17 @@ public class TerrainCreation : EditorWindow {
             }
         }
         terrain.GetComponent<MeshFilter>().sharedMesh.triangles = triangles.ToArray();
+    }
+
+    /// <summary>
+    /// Method that cleans everything
+    /// </summary>
+    private void ClearLists () {
+        vertices.Clear();
+        triangles.Clear();
+        normals.Clear();
+        colors.Clear();
+        uvs.Clear();
     }
     #endregion
 
