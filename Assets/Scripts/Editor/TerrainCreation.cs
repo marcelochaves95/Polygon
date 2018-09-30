@@ -39,6 +39,7 @@ public class TerrainCreation : EditorWindow {
 
     private Material material;
 
+    #region EditorWindow
     /// <summary>
     /// Terrain editor startup method
     /// </summary>
@@ -117,7 +118,58 @@ public class TerrainCreation : EditorWindow {
             GUILayout.Label("");
         }
     }
+    #endregion
 
+    #region Settings
+    /// <summary>
+    /// Method to save the terrain mesh
+    /// </summary>
+    /// <param name="type">Type of terrain</param>
+    private void SaveMesh (string type) {
+        string name = "Assets/Meshs/" + type + ".asset";
+        AssetDatabase.CreateAsset(terrain.GetComponent<MeshFilter>().sharedMesh, name);
+        AssetDatabase.SaveAssets();
+    }
+
+    /// <summary>
+    /// Method to set colors
+    /// </summary>
+    private void Texture () {
+        highColor = Color.blue;
+        mediumColor = Color.red;
+        lowColor = Color.green;
+    }
+
+    private void TextureIsRead(Texture2D heightmap, bool isReadable) {
+        if (heightmap == null) {
+            return;
+        }
+        string assetPath = AssetDatabase.GetAssetPath(heightmap);
+        TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+        if (importer != null) {
+            importer.isReadable = isReadable;
+            AssetDatabase.ImportAsset(assetPath);
+            AssetDatabase.Refresh();
+        }
+    }
+
+    private void LoadHeightmap () {
+        heightmap = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/Heightmap.png");
+    }
+
+    /// <summary>
+    /// Method that cleans everything
+    /// </summary>
+    private void ClearLists () {
+        vertices.Clear();
+        triangles.Clear();
+        normals.Clear();
+        colors.Clear();
+        uvs.Clear();
+    }
+    #endregion
+
+    #region Texture
     /// <summary>
     /// Method to create noise texture
     /// </summary>
@@ -162,53 +214,11 @@ public class TerrainCreation : EditorWindow {
 		}
 		return sum;
 	}
+    #endregion
 
-    private void CreateMesh () {
-        material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Terrain.mat");
-        if (!terrain && !(terrain = GameObject.Find("Terrain"))) {
-            terrain = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            terrain.transform.position = new Vector3(0, 0, 0);
-            terrain.name = "Terrain";
-            terrain.GetComponent<MeshRenderer>().sharedMaterial = material;
-        }
-    }
+    
 
-    /// <summary>
-    /// Method to save the terrain mesh
-    /// </summary>
-    /// <param name="type">Type of terrain</param>
-    private void SaveMesh (string type) {
-        string name = "Assets/Meshs/" + type + ".asset";
-        AssetDatabase.CreateAsset(terrain.GetComponent<MeshFilter>().sharedMesh, name);
-        AssetDatabase.SaveAssets();
-    }
-
-    /// <summary>
-    /// Method that cleans everything
-    /// </summary>
-    private void ClearLists () {
-        vertices.Clear();
-        triangles.Clear();
-        normals.Clear();
-        colors.Clear();
-        uvs.Clear();
-    }
-
-    /// <summary>
-    /// Method to set colors
-    /// </summary>
-    private void Texture () {
-        highColor = Color.blue;
-        mediumColor = Color.red;
-        lowColor = Color.green;
-    }
-
-    private void LoadHeightmap () {
-        TextureImporter importer = AssetImporter.GetAtPath("Assets/Textures/Heightmap.png") as TextureImporter;
-        importer.isReadable = true;
-        heightmap = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/Heightmap.png");
-    }
-
+    #region Creation
     /// <summary>
     /// Method to create terrain
     /// </summary>
@@ -226,6 +236,16 @@ public class TerrainCreation : EditorWindow {
         Debug.Log("Terrain Created");
     }
 
+    private void CreateMesh () {
+        material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Terrain.mat");
+        if (!terrain && !(terrain = GameObject.Find("Terrain"))) {
+            terrain = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            terrain.transform.position = new Vector3(0, 0, 0);
+            terrain.name = "Terrain";
+            terrain.GetComponent<MeshRenderer>().sharedMaterial = material;
+        }
+    }
+
     /// <summary>
     /// Method for creating the vertices
     /// </summary>
@@ -234,7 +254,13 @@ public class TerrainCreation : EditorWindow {
         for (int z = 0; z <= ySize - 1; z++) {
             for (int x = 0; x <= xSize - 1; x++) {
                 Vector2 uv = new Vector2((float)x / (float)xSize, (float)z / (float)ySize);
-                float height = heightmap.GetPixelBilinear(uv.x, uv.y).grayscale * maxHeight;
+                float height;
+                try {
+                    height = heightmap.GetPixelBilinear(uv.x, uv.y).grayscale * maxHeight;
+                } catch (UnityException) {
+                    this.TextureIsRead(heightmap, true);
+                    height = heightmap.GetPixelBilinear(uv.x, uv.y).grayscale * maxHeight;
+                }
                 vertices.Add(new Vector3(x, height, z));
                 uvs.Add(uv);
                 if (height <= maxHeight * 0.45) {
@@ -276,7 +302,9 @@ public class TerrainCreation : EditorWindow {
         }
         terrain.GetComponent<MeshFilter>().sharedMesh.triangles = triangles.ToArray();
     }
+    #endregion
 
+    #region CalculateNormals
     /// <summary>
     /// Method for calculating normal smooth
     /// </summary>
@@ -329,4 +357,5 @@ public class TerrainCreation : EditorWindow {
         }
         terrain.GetComponent<MeshFilter>().sharedMesh.normals = normals.ToArray();
     }
+    #endregion
 }
