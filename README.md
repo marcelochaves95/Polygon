@@ -1,7 +1,9 @@
 <h1 align="center">Procedural Terrain</h1>
 
 <p align="center">
-<img src="https://img.shields.io/badge/language-C%23-8E44AD.svg"><br/>
+  <a href="https://docs.microsoft.com/en-us/dotnet/csharp">
+<img src="https://img.shields.io/badge/C%23-7.3-green.svg">
+</a><br/>
   Creation of procedural terrain from a heightmap texture.
 </p>
 
