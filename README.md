@@ -12,4 +12,4 @@ Creation of procedural terrain from a heightmap texture.
 
 ## License
 
-This project is available under the Apache license. See the LICENSE file for more info.
+Apache 2.0 license. See the [`LICENSE`](LICENSE) file for details.
