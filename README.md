@@ -1,4 +1,4 @@
-# Procedural Terrain
+# Procedural Terrain Tool
 
 [![language](https://img.shields.io/badge/C%23-7.3-green.svg)](https://docs.microsoft.com/en-us/dotnet/csharp)
 
