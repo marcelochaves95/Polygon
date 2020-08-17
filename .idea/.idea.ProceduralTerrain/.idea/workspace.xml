@@ -13,11 +13,14 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/Assets/2.0/Scripts/Editor/MapGeneratorEditor.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/2.0/Scripts/Perlin.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/48050808-8AEE-40CA-B708-18FF164A29D5/33/cffbb042/MathfInternal.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/48050808-8AEE-40CA-B708-18FF164A29D5/b3/3e9ffc93/Mathf.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/4BEC26B5-CBC7-4715-8442-F1499E984732/15/01587c1f/Single.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/2.0/Scripts/MapGenerator.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/2.0/Scripts/Noise.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.ide.rider@1.1.4/Rider/Editor/RiderInitializer.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/2.0/Scripts/MapDisplay.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -27,6 +30,8 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/2.0/MapDisplay.cs" />
         <option value="$PROJECT_DIR$/Assets/2.0/Scripts/Editor/MapGeneratorEditor.cs" />
         <option value="$PROJECT_DIR$/Assets/2.0/Scripts/MapGenerator.cs" />
+        <option value="$PROJECT_DIR$/Assets/2.0/Scripts/Noise.cs" />
+        <option value="$PROJECT_DIR$/Assets/2.0/Scripts/Perlin.cs" />
       </list>
     </option>
   </component>
@@ -85,6 +90,7 @@
       <option name="presentableId" value="Default" />
       <updated>1597097524015</updated>
       <workItem from="1597097526691" duration="1766000" />
+      <workItem from="1597683430212" duration="2970000" />
     </task>
     <servers />
   </component>
@@ -98,7 +104,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>

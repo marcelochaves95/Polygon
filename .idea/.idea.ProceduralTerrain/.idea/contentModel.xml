@@ -30,6 +30,7 @@
             <e p="MapDisplay.cs" t="Include" />
             <e p="MapGenerator.cs" t="Include" />
             <e p="Noise.cs" t="Include" />
+            <e p="Perlin.cs" t="Include" />
           </e>
         </e>
       </e>
