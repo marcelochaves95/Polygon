@@ -35,3 +35,16 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+
+# Rider stuff
+.idea
+_ReSharper.Caches*
+
+.vscode/
+.vs/
+
+/Assets/Plugins/Editor/JetBrains/
+/Assets/Plugins/Editor/JetBrains.meta
+
+/Assets/Plugins/Editor/JetBrains/JetBrains.Rider.Unity.Editor.Plugin.Repacked.dll
+/Assets/Plugins/Editor/JetBrains/JetBrains.Rider.Unity.Editor.Plugin.Repacked.dll.meta
