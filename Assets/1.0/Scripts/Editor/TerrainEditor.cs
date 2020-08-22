@@ -158,9 +158,9 @@ namespace Terrain.Editor
             noiseTex.SetPixels(pix);
             noiseTex.Apply();
             byte[] bytes = noiseTex.EncodeToPNG ();
-            Debug.Log("Creating Texture Heightmap: " + Application.dataPath + "/Textures/Heightmap.png");
-            File.WriteAllBytes(Application.dataPath + "/Textures/Heightmap.png", bytes);
-            AssetDatabase.ImportAsset("Assets/Textures/Heightmap.png");
+            Debug.Log("Creating Texture Heightmap: " + Application.dataPath + "1.0/Textures/Heightmap.png");
+            File.WriteAllBytes(Application.dataPath + "1.0/Textures/Heightmap.png", bytes);
+            AssetDatabase.ImportAsset("Assets/1.0/Textures/Heightmap.png");
         }
 
         /// <summary>
@@ -189,7 +189,7 @@ namespace Terrain.Editor
         /// </summary>
         private void LoadHeightmap()
         {
-            heightmap = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/Heightmap.png");
+            heightmap = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/1.0/Textures/Heightmap.png");
         }
 
         /// <summary>
@@ -250,7 +250,7 @@ namespace Terrain.Editor
         /// </summary>
         private void CreateMesh()
         {
-            material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Terrain.mat");
+            material = AssetDatabase.LoadAssetAtPath<Material>("Assets/1.0/Materials/Terrain.mat");
             if (!terrain && !(terrain = GameObject.Find("Terrain")))
             {
                 terrain = GameObject.CreatePrimitive(PrimitiveType.Plane);
@@ -266,7 +266,7 @@ namespace Terrain.Editor
         /// <param name="type">Type of terrain</param>
         private void SaveMesh(string type)
         {
-            string name = "Assets/Meshs/" + type + ".asset";
+            string name = "Assets/1.0/Meshs/" + type + ".asset";
             AssetDatabase.CreateAsset(terrain.GetComponent<MeshFilter>().sharedMesh, name);
             AssetDatabase.SaveAssets();
         }
