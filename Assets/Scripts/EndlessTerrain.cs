@@ -186,7 +186,7 @@ public class EndlessTerrain : MonoBehaviour
         }
     }
 
-    class LODMesh
+    private class LODMesh
     {
         public Mesh mesh;
         public bool hasRequestedMesh;
