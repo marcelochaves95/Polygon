@@ -264,50 +264,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   drawMode: 2
-  normalizedMode: 1
-  useFlatShading: 1
+  terrainData: {fileID: 11400000, guid: 9be44f87d391a4d098ce37efb0a64fbe, type: 2}
+  noiseData: {fileID: 11400000, guid: 5f5c2fa1138c448589fccf5c82ee864f, type: 2}
   editorPreviewLOD: 0
-  noiseScale: 90.3
-  octaves: 5
-  persistance: 0.5
-  lacunarity: 2
-  seed: 9
-  offset: {x: 27.86, y: 15.27}
-  useFalloff: 0
-  meshHeightMultiplier: 22.3
-  meshHeightCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 0.64037484
-      value: 0.30427733
-      inSlope: 1.0308056
-      outSlope: 1.0308056
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.09750092
-      outWeight: 0.19285952
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
   autoUpdate: 1
   regions:
   - name: Water Deep
