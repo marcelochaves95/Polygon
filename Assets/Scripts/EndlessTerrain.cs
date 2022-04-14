@@ -17,7 +17,7 @@ public class EndlessTerrain : MonoBehaviour
     private Vector2 viewerPositionOld;
     private static MapGenerator mapGenerator; 
     private int chunkSize;
-    private int chunkVisibleInViewDist;
+    private int chunksVisibleInViewDist;
 
     private Dictionary<Vector2, TerrainChunk> terrainChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
     private static List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
@@ -28,7 +28,7 @@ public class EndlessTerrain : MonoBehaviour
 
         maxViewDst = detailLevels[detailLevels.Length - 1].visibleDstThreshold;
         chunkSize = mapGenerator.mapChunkSize - 1;
-        chunkVisibleInViewDist = Mathf.RoundToInt(maxViewDst / chunkSize);
+        chunksVisibleInViewDist = Mathf.RoundToInt(maxViewDst / chunkSize);
 
         UpdateVisibleChunks();
     }
@@ -55,18 +55,18 @@ public class EndlessTerrain : MonoBehaviour
         int currentChunkCoordX = Mathf.RoundToInt(viewerPosition.x / chunkSize);
         int currentChunkCoordY = Mathf.RoundToInt(viewerPosition.y / chunkSize);
 
-        for (int yOffset = -chunkVisibleInViewDist; yOffset <= chunkVisibleInViewDist; yOffset++)
+        for (int yOffset = -chunksVisibleInViewDist; yOffset <= chunksVisibleInViewDist; yOffset++)
         {
-            for (int xOffset = -chunkVisibleInViewDist; xOffset <= chunkVisibleInViewDist; xOffset++)
+            for (int xOffset = -chunksVisibleInViewDist; xOffset <= chunksVisibleInViewDist; xOffset++)
             {
-                Vector2 viewerChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
-                if (terrainChunkDictionary.ContainsKey(viewerChunkCoord))
+                Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
+                if (terrainChunkDictionary.ContainsKey(viewedChunkCoord))
                 {
-                    terrainChunkDictionary[viewerChunkCoord].UpdateTerrainChunk();
+                    terrainChunkDictionary[viewedChunkCoord].UpdateTerrainChunk();
                 }
                 else
                 {
-                    terrainChunkDictionary.Add(viewerChunkCoord, new TerrainChunk(viewerChunkCoord, chunkSize, detailLevels, transform, mapMaterial));
+                    terrainChunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, detailLevels, transform, mapMaterial));
                 }
             }
         }
@@ -84,7 +84,7 @@ public class EndlessTerrain : MonoBehaviour
 
         private LODInfo[] detailLevels;
         private LODMesh[] lodMeshes;
-        private LODMesh collistionLODMesh;
+        private LODMesh collisionLODMesh;
 
         private MapData mapData;
         private bool mapDataReceived;
@@ -115,7 +115,7 @@ public class EndlessTerrain : MonoBehaviour
                 lodMeshes[i] = new LODMesh(detailLevels[i].lod, UpdateTerrainChunk);
                 if (detailLevels[i].useForCollider)
                 {
-                    collistionLODMesh = lodMeshes[i];
+                    collisionLODMesh = lodMeshes[i];
                 }
             }
 
@@ -149,7 +149,7 @@ public class EndlessTerrain : MonoBehaviour
                     {
                         if (viewerDstFromNearestEdge > detailLevels[i].visibleDstThreshold)
                         {
-                            lodIndex++;
+                            lodIndex = i + 1;
                         }
                         else
                         {
@@ -173,13 +173,13 @@ public class EndlessTerrain : MonoBehaviour
 
                     if (lodIndex == 0)
                     {
-                        if (collistionLODMesh.hasMesh)
+                        if (collisionLODMesh.hasMesh)
                         {
-                            meshCollider.sharedMesh = collistionLODMesh.mesh;
+                            meshCollider.sharedMesh = collisionLODMesh.mesh;
                         }
-                        else if (!collistionLODMesh.hasRequestedMesh)
+                        else if (!collisionLODMesh.hasRequestedMesh)
                         {
-                            collistionLODMesh.RequestMesh(mapData);
+                            collisionLODMesh.RequestMesh(mapData);
                         }
                     }
 
