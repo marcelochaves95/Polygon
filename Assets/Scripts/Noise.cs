@@ -3,14 +3,13 @@ using Random = System.Random;
 
 public static class Noise
 {
-
-    public enum NormalizedMode
+    public enum NormalizeMode
     {
         Local,
         Global
     };
 
-    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset, NormalizedMode normalizedMode)
+    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset, NormalizeMode normalizeMode)
     {
         float[,] noiseMap = new float[mapWidth,mapHeight];
 
@@ -80,7 +79,7 @@ public static class Noise
         {
             for (int x = 0; x < mapWidth; x++)
             {
-                if (normalizedMode == NormalizedMode.Local)
+                if (normalizeMode == NormalizeMode.Local)
                 {
                     noiseMap[x, y] = Mathf.InverseLerp(minLocalNoiseHeight, maxLocalNoiseHeight, noiseMap[x, y]);
                 }
