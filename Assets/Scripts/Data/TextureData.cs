@@ -38,14 +38,14 @@ public class TextureData : UpdatableData
 
     private Texture2DArray GenerateTexture2DArray(Texture2D[] textures)
     {
-        Texture2DArray texturesArray = new Texture2DArray(textureSize, textureSize, textures.Length, textureFormat, true);
+        Texture2DArray textureArray = new Texture2DArray(textureSize, textureSize, textures.Length, textureFormat, true);
         for (int i = 0; i < textures.Length; i++)
         {
-            texturesArray.SetPixels(textures[i].GetPixels(), i);
+            textureArray.SetPixels(textures[i].GetPixels(), i);
         }
 
-        texturesArray.Apply();
-        return texturesArray;
+        textureArray.Apply();
+        return textureArray;
     }
     [Serializable]
     public class Layer
