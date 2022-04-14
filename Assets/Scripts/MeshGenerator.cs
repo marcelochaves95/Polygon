@@ -67,7 +67,7 @@ public static class MeshGenerator
 			}
 		}
 
-		meshData.Finalize();
+		meshData.ProcessMesh();
 
 		return meshData;
 	}
@@ -192,7 +192,7 @@ public class MeshData
 		return Vector3.Cross(sideAB, sideAC).normalized;
 	}
 
-	public void Finalize()
+	public void ProcessMesh()
 	{
 		if (useFlatShading)
 		{
@@ -200,16 +200,16 @@ public class MeshData
 		}
 		else
 		{
-			BakedNormals();
+			BakeNormals();
 		}
 	}
 
-	private void BakedNormals()
+	private void BakeNormals()
 	{
 		bakedNormals = CalculateNormals();
 	}
 
-	public void FlatShading()
+	private void FlatShading()
 	{
 		Vector3[] flatShadedVertices = new Vector3[triangles.Length];
 		Vector2[] flatShadedUvs = new Vector2[triangles.Length];
