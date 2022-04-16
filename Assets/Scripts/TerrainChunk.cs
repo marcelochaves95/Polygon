@@ -25,24 +25,22 @@ public class TerrainChunk
     private bool _hasSetCollider;
     private readonly float _maxViewDst;
 
-    private readonly HeightMapSettings _heightMapSettings;
-    private readonly MeshSettings _meshSettings;
+    private readonly TerrainSettings _terrainSettings;
     private readonly Transform _viewer;
     
     private Vector2 _viewerPosition => new Vector2(_viewer.position.x, _viewer.position.z);
 
-    public TerrainChunk(Vector2 coord, HeightMapSettings heightMapSettings, MeshSettings meshSettings, LODInfo[] detailLevels, int colliderLODIndex, Transform parent, Transform viewer, Material material)
+    public TerrainChunk(Vector2 coord, TerrainSettings terrainSettings, LODInfo[] detailLevels, int colliderLODIndex, Transform parent, Transform viewer, Material material)
     {
         Coord = coord;
         _detailLevels = detailLevels;
         _colliderLODIndex = colliderLODIndex;
-        _heightMapSettings = heightMapSettings;
-        _meshSettings = meshSettings;
+        _terrainSettings = terrainSettings;
         _viewer = viewer;
 
-        _sampleCentre = coord * meshSettings.MeshWorldSize / meshSettings.MeshScale;
-        Vector2 position = coord * meshSettings.MeshWorldSize;
-        _bounds = new Bounds(position, Vector2.one * meshSettings.MeshWorldSize);
+        _sampleCentre = coord * terrainSettings.MeshWorldSize / terrainSettings.MeshScale;
+        Vector2 position = coord * terrainSettings.MeshWorldSize;
+        _bounds = new Bounds(position, Vector2.one * terrainSettings.MeshWorldSize);
 
         _meshObject = new GameObject("Terrain Chunk");
         _meshRenderer = _meshObject.AddComponent<MeshRenderer>();
@@ -74,7 +72,7 @@ public class TerrainChunk
 
         object GenerateHeightMap()
         {
-            return HeightMapGenerator.GenerateHeightMap(_meshSettings.NumVertsPerLine, _meshSettings.NumVertsPerLine, _heightMapSettings, _sampleCentre);
+            return HeightMapGenerator.GenerateHeightMap(_terrainSettings.NumVertsPerLine, _terrainSettings.NumVertsPerLine, _terrainSettings, _sampleCentre);
         }
 
         void OnHeightMapReceived(object heightMapObject)
@@ -118,7 +116,7 @@ public class TerrainChunk
                 }
                 else if (!lodMesh.HasRequestedMesh)
                 {
-                    lodMesh.RequestMesh(_heightMap, _meshSettings);
+                    lodMesh.RequestMesh(_heightMap, _terrainSettings);
                 }
             }
         }
@@ -140,7 +138,7 @@ public class TerrainChunk
         {
             if (!_lodMeshes[_colliderLODIndex].HasRequestedMesh)
             {
-                _lodMeshes[_colliderLODIndex].RequestMesh(_heightMap, _meshSettings);
+                _lodMeshes[_colliderLODIndex].RequestMesh(_heightMap, _terrainSettings);
             }
         }
 

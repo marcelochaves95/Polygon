@@ -3,35 +3,37 @@ using System.Collections.Generic;
 
 public class TerrainGenerator : MonoBehaviour
 {
+    [SerializeField] private int _colliderLODIndex;
+
+    [SerializeField] private LODInfo[] _detailLevels;
+
+    [SerializeField] private Transform _viewer;
+
+    [SerializeField] private Material _mapMaterial;
+
+    [SerializeField] private TerrainSettings _terrainSettings;
+
+    private int _chunksVisibleInViewDst;
+
+    private float _meshWorldSize;
+
     private const float VIEWER_MOVE_THRESHOLD_FOR_CHUNK_UPDATE = 25f;
     private const float SQR_VIEWER_MOVE_THRESHOLD_FOR_CHUNK_UPDATE = VIEWER_MOVE_THRESHOLD_FOR_CHUNK_UPDATE * VIEWER_MOVE_THRESHOLD_FOR_CHUNK_UPDATE;
-
-    public int ColliderLODIndex;
-    public LODInfo[] DetailLevels;
-
-    public MeshSettings MeshSettings;
-    public HeightMapSettings HeightMapSettings;
-    public TextureData TextureSettings;
-
-    public Transform Viewer;
-    public Material MapMaterial;
 
     private Vector2 _viewerPosition;
     private Vector2 _viewerPositionOld;
 
-    private float _meshWorldSize;
-    private int _chunksVisibleInViewDst;
+    private readonly List<TerrainChunk> _visibleTerrainChunks = new List<TerrainChunk>();
 
     private readonly Dictionary<Vector2, TerrainChunk> _terrainChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
-    private readonly List<TerrainChunk> _visibleTerrainChunks = new List<TerrainChunk>();
 
     private void Start()
     {
-        TextureSettings.ApplyToMaterial(MapMaterial);
-        TextureSettings.UpdateMeshHeights(MapMaterial, HeightMapSettings.MinHeight, HeightMapSettings.MaxHeight);
+        _terrainSettings.ApplyToMaterial(_mapMaterial);
+        _terrainSettings.UpdateMeshHeights(_mapMaterial, _terrainSettings.MinHeight, _terrainSettings.MaxHeight);
 
-        float maxViewDst = DetailLevels[DetailLevels.Length - 1].VisibleDstThreshold;
-        _meshWorldSize = MeshSettings.MeshWorldSize;
+        float maxViewDst = _detailLevels[_detailLevels.Length - 1].VisibleDstThreshold;
+        _meshWorldSize = _terrainSettings.MeshWorldSize;
         _chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / _meshWorldSize);
 
         UpdateVisibleChunks();
@@ -39,7 +41,7 @@ public class TerrainGenerator : MonoBehaviour
 
     private void Update()
     {
-        Vector3 position = Viewer.position;
+        Vector3 position = _viewer.position;
         _viewerPosition = new Vector2(position.x, position.z);
 
         if (_viewerPosition != _viewerPositionOld)
@@ -82,7 +84,7 @@ public class TerrainGenerator : MonoBehaviour
                     }
                     else
                     {
-                        TerrainChunk newChunk = new TerrainChunk(viewedChunkCoord, HeightMapSettings, MeshSettings, DetailLevels, ColliderLODIndex, transform, Viewer, MapMaterial);
+                        TerrainChunk newChunk = new TerrainChunk(viewedChunkCoord, _terrainSettings, _detailLevels, _colliderLODIndex, transform, _viewer, _mapMaterial);
                         _terrainChunkDictionary.Add(viewedChunkCoord, newChunk);
                         newChunk.OnVisibilityChanged += OnTerrainChunkVisibilityChanged;
                         newChunk.Load();

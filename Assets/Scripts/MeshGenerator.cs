@@ -2,14 +2,14 @@
 
 public static class MeshGenerator
 {
-    public static MeshData GenerateTerrainMesh(float[,] heightMap, MeshSettings meshSettings, int levelOfDetail)
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, TerrainSettings terrainSettings, int levelOfDetail)
     {
         int skipIncrement = levelOfDetail == 0 ? 1 : levelOfDetail * 2;
-        int numVertsPerLine = meshSettings.NumVertsPerLine;
+        int numVertsPerLine = terrainSettings.NumVertsPerLine;
 
-        var topLeft = new Vector2(-1, 1) * meshSettings.MeshWorldSize / 2f;
+        var topLeft = new Vector2(-1, 1) * terrainSettings.MeshWorldSize / 2f;
 
-        var meshData = new MeshData(numVertsPerLine, skipIncrement, meshSettings.UseFlatShading);
+        var meshData = new MeshData(numVertsPerLine, skipIncrement, terrainSettings.UseFlatShading);
 
         int[,] vertexIndicesMap = new int[numVertsPerLine, numVertsPerLine];
         int meshVertexIndex = 0;
@@ -49,7 +49,7 @@ public static class MeshGenerator
 
                     int vertexIndex = vertexIndicesMap[x, y];
                     var percent = new Vector2(x - 1, y - 1) / (numVertsPerLine - 3);
-                    var vertexPosition2D = topLeft + new Vector2(percent.x, -percent.y) * meshSettings.MeshWorldSize;
+                    var vertexPosition2D = topLeft + new Vector2(percent.x, -percent.y) * terrainSettings.MeshWorldSize;
                     float height = heightMap[x, y];
 
                     if (isEdgeConnectionVertex)

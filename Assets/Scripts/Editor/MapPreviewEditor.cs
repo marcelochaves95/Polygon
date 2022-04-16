@@ -18,7 +18,7 @@ public class MapPreviewEditor : Editor
 
 		if (GUILayout.Button("Generate"))
 		{
-			mapPreview.DrawMapInEditor ();
+			mapPreview.DrawMapInEditor();
 		}
 	}
 }

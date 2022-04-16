@@ -15,14 +15,14 @@ public class LODMesh
         _lod = lod;
     }
 
-    public void RequestMesh(HeightMap heightMap, MeshSettings meshSettings)
+    public void RequestMesh(HeightMap heightMap, TerrainSettings terrainSettings)
     {
         HasRequestedMesh = true;
         ThreadedDataRequester.RequestData(GenerateTerrainMesh, OnMeshDataReceived);
 
         object GenerateTerrainMesh()
         {
-            return MeshGenerator.GenerateTerrainMesh(heightMap.Values, meshSettings, _lod);
+            return MeshGenerator.GenerateTerrainMesh(heightMap.Values, terrainSettings, _lod);
         }
 
         void OnMeshDataReceived(object meshDataObject)
