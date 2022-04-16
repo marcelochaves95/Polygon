@@ -1,35 +1,25 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [CreateAssetMenu]
 public class MeshSettings : UpdatableData
 {
-    public const int numSupportedLODs = 5;
-    public const int numSupportedChunkSizes = 9;
-    public const int numSupportedFlatshadedChunkSizes = 3;
-    public static readonly int[] supportedChunkSizes = { 48, 72, 96, 120, 144, 168, 192, 216, 240 };
+	[Range(0, NUM_SUPPORTED_CHUNK_SIZES - 1)]
+    public int ChunkSizeIndex;
 
-    public float meshScale = 2.5f;
-    public bool useFlatShading;
-    
-    [Range(0, numSupportedChunkSizes - 1)]
-    public int chunkSizeIndex;
-    [Range(0, numSupportedFlatshadedChunkSizes - 1)]
-    public int flatshadedChunkSizeIndex;
-    
-    // num verts per line of mesh rendered at LOD = 0. Includes the 2 extra verts that are excluded from final mesh, but used for calculating normals
-    public int numVertsPerLine
-    {
-        get
-        {
-            return supportedChunkSizes[useFlatShading ? flatshadedChunkSizeIndex : chunkSizeIndex] - 1;
-        }
-    }
+    [Range(0, NUM_SUPPORTED_FLAT_CHUNK_SIZES - 1)]
+    public int FlatChunkSizeIndex;
 
-    public float meshWorldSize
+    public const int NUM_SUPPORTED_LODS = 5;
+	public float MeshScale = 2.5f;
+    public bool UseFlatShading;
+    private const int NUM_SUPPORTED_CHUNK_SIZES = 9;
+    private const int NUM_SUPPORTED_FLAT_CHUNK_SIZES = 3;
+    private static readonly int[] _supportedChunkSizes =
     {
-        get
-        {
-            return (numVertsPerLine - 3) * meshScale;
-        }
-    }
+        48, 72, 96, 120, 144,
+        168, 192, 216, 240
+    };
+
+	public int NumVertsPerLine => _supportedChunkSizes[UseFlatShading ? FlatChunkSizeIndex : ChunkSizeIndex] + 5;
+    public float MeshWorldSize => (NumVertsPerLine - 3) * MeshScale;
 }

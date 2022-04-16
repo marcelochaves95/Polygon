@@ -1,63 +1,61 @@
-using System;
+﻿using UnityEngine;
 using System.Linq;
-using UnityEngine;
 
 [CreateAssetMenu]
 public class TextureData : UpdatableData
 {
-    private const int textureSize = 512;
-    private const TextureFormat textureFormat = TextureFormat.RGB565;
+    [SerializeField]
+	public Layer[] _layers;
 
-    public Layer[] layers;
+    private const int TEXTURE_SIZE = 512;
+    private const TextureFormat TEXTURE_FORMAT = TextureFormat.RGB565;
+	private float _savedMinHeight;
+    private float _savedMaxHeight;
 
-    private float savedMinHeight;
-    private float savedMaxHeight;
+    private static readonly int _layerCount = Shader.PropertyToID("layerCount");
+    private static readonly int _baseColours = Shader.PropertyToID("baseColours");
+    private static readonly int _baseStartHeights = Shader.PropertyToID("baseStartHeights");
+    private static readonly int _baseBlends = Shader.PropertyToID("baseBlends");
+    private static readonly int _baseColourStrength = Shader.PropertyToID("baseColourStrength");
+    private static readonly int _baseTextureScales = Shader.PropertyToID("baseTextureScales");
+    private static readonly int _baseTextures = Shader.PropertyToID("baseTextures");
+    private static readonly int _minHeight = Shader.PropertyToID("minHeight");
+    private static readonly int _maxHeight = Shader.PropertyToID("maxHeight");
 
     public void ApplyToMaterial(Material material)
     {
-        material.SetInt("layerCount", layers.Length);
-        material.SetColorArray("baseColours", layers.Select(x => x.tint).ToArray());
-        material.SetFloatArray("baseStartHeights", layers.Select(x => x.startHeight).ToArray());
-        material.SetFloatArray("baseBlends", layers.Select(x => x.blendStrength).ToArray());
-        material.SetFloatArray("baseColourStrength", layers.Select(x => x.tintStrength).ToArray());
-        material.SetFloatArray("baseTextureScales", layers.Select(x => x.textureScale).ToArray());
-        Texture2DArray texturesArray = GenerateTexture2DArray(layers.Select(x => x.texture).ToArray());
-        material.SetTexture("baseTextures", texturesArray);
+        material.SetInt(_layerCount, _layers.Length);
+        material.SetColorArray(_baseColours, _layers.Select(x => x.Tint).ToArray());
+        material.SetFloatArray(_baseStartHeights, _layers.Select(x => x.StartHeight).ToArray());
+        material.SetFloatArray(_baseBlends, _layers.Select(x => x.BlendStrength).ToArray());
+        material.SetFloatArray(_baseColourStrength, _layers.Select(x => x.TintStrength).ToArray());
+        material.SetFloatArray(_baseTextureScales, _layers.Select(x => x.TextureScale).ToArray());
 
-        UpdateMeshHeights(material, savedMinHeight, savedMaxHeight);
+        Texture2DArray texturesArray = GenerateTextureArray(_layers.Select(x => x.Texture).ToArray());
+        material.SetTexture(_baseTextures, texturesArray);
+
+        UpdateMeshHeights(material, _savedMinHeight, _savedMaxHeight);
     }
 
     public void UpdateMeshHeights(Material material, float minHeight, float maxHeight)
     {
-        savedMinHeight = minHeight;
-        savedMaxHeight = maxHeight;
-
-        material.SetFloat("minHeight", minHeight);
-        material.SetFloat("maxHeight", maxHeight);
+        _savedMinHeight = minHeight;
+        _savedMaxHeight = maxHeight;
+        material.SetFloat(_minHeight, minHeight);
+        material.SetFloat(_maxHeight, maxHeight);
     }
 
-    private Texture2DArray GenerateTexture2DArray(Texture2D[] textures)
+    private Texture2DArray GenerateTextureArray(Texture2D[] textures)
     {
-        Texture2DArray textureArray = new Texture2DArray(textureSize, textureSize, textures.Length, textureFormat, true);
+        var textureArray = new Texture2DArray(TEXTURE_SIZE, TEXTURE_SIZE, textures.Length, TEXTURE_FORMAT, true);
+
         for (int i = 0; i < textures.Length; i++)
         {
             textureArray.SetPixels(textures[i].GetPixels(), i);
         }
 
         textureArray.Apply();
+
         return textureArray;
-    }
-    [Serializable]
-    public class Layer
-    {
-        public Texture2D texture;
-        public Color tint;
-        [Range(0, 1)]
-        public float tintStrength;
-        [Range(0, 1)]
-        public float startHeight;
-        [Range(0, 1)]
-        public float blendStrength;
-        public float textureScale;
     }
 }

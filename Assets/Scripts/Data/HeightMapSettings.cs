@@ -1,36 +1,20 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [CreateAssetMenu]
 public class HeightMapSettings : UpdatableData
 {
-    public NoiseSettings noiseSettings;
-    
-    public bool useFalloff;
+    public NoiseSettings NoiseSettings;
+    public AnimationCurve HeightCurve;
+	public float HeightMultiplier;
 
-    public float heightMultiplier;
-    public AnimationCurve heightCurve;
+    public float MinHeight => HeightMultiplier * HeightCurve.Evaluate(0);
+    public float MaxHeight => HeightMultiplier * HeightCurve.Evaluate(1);
 
-    public float minHeight
-    {
-        get
-        {
-            return heightMultiplier * heightCurve.Evaluate(0);
-        }
-    }
-
-    public float maxHeight
-    {
-        get
-        {
-            return heightMultiplier * heightCurve.Evaluate(1);
-        }
-    }
-
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     protected override void OnValidate()
     {
-        noiseSettings.ValidateValues();
+        NoiseSettings.ValidateValues();
         base.OnValidate();
     }
-    #endif
+#endif
 }

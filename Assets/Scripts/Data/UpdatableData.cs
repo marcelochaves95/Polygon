@@ -1,27 +1,25 @@
+﻿using UnityEngine;
+using UnityEditor;
 using System;
-using UnityEngine;
 
 public class UpdatableData : ScriptableObject
 {
+    public bool AutoUpdate;
     public event Action OnValuesUpdated;
-    public bool autoUpdate;
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     protected virtual void OnValidate()
     {
-        if (autoUpdate)
+        if (AutoUpdate)
         {
-            UnityEditor.EditorApplication.update += NotifyOfUpdatedValues;
+            EditorApplication.update += NotifyOfUpdatedValues;
         }
     }
 
     public void NotifyOfUpdatedValues()
     {
-        UnityEditor.EditorApplication.update -= NotifyOfUpdatedValues;
-        if (OnValuesUpdated != null)
-        {
-            OnValuesUpdated();
-        }
+        EditorApplication.update -= NotifyOfUpdatedValues;
+        OnValuesUpdated?.Invoke();
     }
-    #endif
+#endif
 }
