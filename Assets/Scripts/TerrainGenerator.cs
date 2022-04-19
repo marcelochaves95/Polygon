@@ -14,7 +14,7 @@ namespace ProceduralTerrain
         private GameObject _terrain;
         private MeshFilter _meshFilter;
         private MeshRenderer _meshRenderer;
-        private readonly Material _material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Terrain.mat");
+        private readonly Material _material;
         private readonly EMeshType _meshType;
         private readonly int _xSize;
         private readonly int _ySize;
@@ -23,9 +23,9 @@ namespace ProceduralTerrain
         private readonly TerrainColor _terrainColor;
         private readonly EShaderType _shaderType;
 
-        private readonly Shader _terrainShader = Shader.Find("Custom/TerrainShader");
-        private readonly Shader _terrainShaderColor = Shader.Find("Custom/TerrainShaderColor");
-        private readonly Shader _terrainShaderTexture = Shader.Find("Custom/TerrainShaderTexture");
+        private readonly Shader _terrainShader;
+        private readonly Shader _terrainShaderColor;
+        private readonly Shader _terrainShaderTexture;
 
         public TerrainGenerator(EMeshType meshType, int xSize, int ySize, Texture2D heightmap, int maxHeight, TerrainColor terrainColor, EShaderType shaderType)
         {
@@ -36,6 +36,11 @@ namespace ProceduralTerrain
             _maxHeight = maxHeight;
             _terrainColor = terrainColor;
             _shaderType = shaderType;
+
+            _terrainShader = Shader.Find("Custom/TerrainShader");
+            _terrainShaderColor = Shader.Find("Custom/TerrainShaderColor");
+            _terrainShaderTexture = Shader.Find("Custom/TerrainShaderTexture");
+            _material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Terrain.mat");
         }
 
         public void GenerateTerrain(bool hasSaveMesh = false)

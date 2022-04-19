@@ -1,7 +1,6 @@
 ﻿using System;
 using UnityEngine;
 using UnityEditor;
-using ProceduralTerrain;
 
 namespace ProceduralTerrain.Editor
 {
@@ -10,14 +9,13 @@ namespace ProceduralTerrain.Editor
         private EMeshType _meshType;
         private EShaderType _shaderType;
 
-        private int maxHeight;
-        private int xSize = 1;
-        private int ySize = 1;
-        private int textureResolution = 1024;
-        private static int octavees = 8;
+        private int _maxHeight;
+        private int _xSize = 1;
+        private int _ySize = 1;
+        private int _textureResolution = 1024;
+        private int _octaves = 8;
 
-        private TerrainColor _terrainColor;
-
+        private TerrainColor _terrainColor = new TerrainColor();
         private Texture2D heightmap;
 
         [MenuItem("Terrain/Create Terrain...")]
@@ -38,8 +36,8 @@ namespace ProceduralTerrain.Editor
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 GUILayout.Label("TEXTURE SETTINGS", style);
-                octavees = EditorGUILayout.IntSlider("Number of Octaves:", octavees, 0, 8);
-                textureResolution = EditorGUILayout.IntField("Texture Resolution:", textureResolution);
+                _octaves = EditorGUILayout.IntSlider("Number of Octaves:", _octaves, 0, 8);
+                _textureResolution = EditorGUILayout.IntField("Texture Resolution:", _textureResolution);
                 heightmap = (Texture2D) EditorGUILayout.ObjectField("Select Heightmap:", heightmap, typeof(Texture2D), true);
                 if (!heightmap)
                 {
@@ -48,7 +46,7 @@ namespace ProceduralTerrain.Editor
 
                 if (GUILayout.Button("Generate Texture"))
                 {
-                    Noise.CreateNoiseTexture(textureResolution);
+                    Noise.CreateNoiseTexture(_textureResolution);
                 }
             }
 
@@ -77,9 +75,9 @@ namespace ProceduralTerrain.Editor
                 GUILayout.Label("TERRAIN SETTINGS", style);
                 using (var scope = new EditorGUI.ChangeCheckScope())
                 {
-                    xSize = EditorGUILayout.IntSlider("X Size:", xSize, 2, 100);
-                    ySize = EditorGUILayout.IntSlider("Y Size:", ySize, 2, 100);
-                    maxHeight = EditorGUILayout.IntSlider("Max Height:", maxHeight, 1, 100);
+                    _xSize = EditorGUILayout.IntSlider("X Size:", _xSize, 2, 100);
+                    _ySize = EditorGUILayout.IntSlider("Y Size:", _ySize, 2, 100);
+                    _maxHeight = EditorGUILayout.IntSlider("Max Height:", _maxHeight, 1, 100);
                     _meshType = (EMeshType) EditorGUILayout.EnumPopup("Type of Terrain:", _meshType);
 
                     if (scope.changed)
@@ -93,8 +91,8 @@ namespace ProceduralTerrain.Editor
                     _shaderType = (EShaderType) EditorGUILayout.EnumPopup("Shader type:", _shaderType);
                     if (GUILayout.Button("Generate Terrain"))
                     {
-                        var meshGenerator = new ProceduralTerrain.TerrainGenerator(_meshType, xSize, ySize, heightmap, maxHeight, _terrainColor, _shaderType);
-                        meshGenerator.GenerateTerrain(true);
+                        var meshGenerator = new TerrainGenerator(_meshType, _xSize, _ySize, heightmap, _maxHeight, _terrainColor, _shaderType);
+                        meshGenerator.GenerateTerrain();
                     }
                 }
             }
@@ -123,7 +121,7 @@ namespace ProceduralTerrain.Editor
 
         private void GenerateTerrain()
         {
-            var meshGenerator = new TerrainGenerator(_meshType, xSize, ySize, heightmap, maxHeight, _terrainColor, _shaderType);
+            var meshGenerator = new TerrainGenerator(_meshType, _xSize, _ySize, heightmap, _maxHeight, _terrainColor, _shaderType);
             meshGenerator.GenerateTerrain();
         }
     }
