@@ -35,3 +35,9 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+Assets/.DS_Store
+.idea
+.collabignore
+.DS_Store
+Logs
+UserSettings
