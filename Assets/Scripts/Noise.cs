@@ -1,84 +1,57 @@
-﻿using UnityEngine;
+using System.IO;
+using UnityEditor;
+using UnityEngine;
 
-public static class Noise
+namespace ProceduralTerrain
 {
-    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, NoiseSettings settings, Vector2 sampleCentre)
+    public static class Noise
     {
-        float[,] noiseMap = new float[mapWidth, mapHeight];
-
-        var prng = new System.Random(settings.Seed);
-        Vector2[] octaveOffsets = new Vector2[settings.Octaves];
-
-        float maxPossibleHeight = 0;
-        float amplitude = 1;
-
-        for (int i = 0; i < settings.Octaves; i++)
+        public static void CreateNoiseTexture(int textureResolution)
         {
-            float offsetX = prng.Next(-100000, 100000) + settings.Offset.x + sampleCentre.x;
-            float offsetY = prng.Next(-100000, 100000) - settings.Offset.y - sampleCentre.y;
-            octaveOffsets[i] = new Vector2(offsetX, offsetY);
+            int octaves = 8;
+            Texture2D noiseTexture = new Texture2D(textureResolution, textureResolution);
+            Color[] pixes = new Color[textureResolution * textureResolution];
+            float xOriginal = Random.value * 100000f;
+            float yOriginal = Random.value * 100000f;
+            float height = 0f;
 
-            maxPossibleHeight += amplitude;
-            amplitude *= settings.Persistance;
-        }
-
-        float maxLocalNoiseHeight = float.MinValue;
-        float minLocalNoiseHeight = float.MaxValue;
-
-        float halfWidth = mapWidth / 2f;
-        float halfHeight = mapHeight / 2f;
-
-        for (int y = 0; y < mapHeight; y++)
-        {
-            for (int x = 0; x < mapWidth; x++)
+            while (height < noiseTexture.height)
             {
-                amplitude = 1;
-                float frequency = 1;
-                float noiseHeight = 0;
-
-                for (int i = 0; i < settings.Octaves; i++)
+                float width = 0f;
+                while (width < noiseTexture.width)
                 {
-                    float sampleX = (x - halfWidth + octaveOffsets[i].x) / settings.Scale * frequency;
-                    float sampleY = (y - halfHeight + octaveOffsets[i].y) / settings.Scale * frequency;
-
-                    float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
-                    noiseHeight += perlinValue * amplitude;
-
-                    amplitude *= settings.Persistance;
-                    frequency *= settings.Lacunarity;
+                    float sample = OctavesNoise2D(xOriginal + width / noiseTexture.width, yOriginal + height / noiseTexture.height, octaves, 1f, 0.75f);
+                    pixes[(int) height * noiseTexture.width + (int) width] = new Color(sample, sample, sample);
+                    width++;
                 }
-
-                if (noiseHeight > maxLocalNoiseHeight)
-                {
-                    maxLocalNoiseHeight = noiseHeight;
-                }
-
-                if (noiseHeight < minLocalNoiseHeight)
-                {
-                    minLocalNoiseHeight = noiseHeight;
-                }
-
-                noiseMap[x, y] = noiseHeight;
-
-                if (settings.NormalizeMode == ENormalizeMode.Global)
-                {
-                    float normalizedHeight = (noiseMap[x, y] + 1) / (maxPossibleHeight / 0.9f);
-                    noiseMap[x, y] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);
-                }
+                height++;
             }
+
+            noiseTexture.SetPixels(pixes);
+            noiseTexture.Apply();
+            byte[] bytes = noiseTexture.EncodeToPNG();
+            SaveFile(bytes);
         }
 
-        if (settings.NormalizeMode == ENormalizeMode.Local)
+        private static float OctavesNoise2D(float x, float y, int octaves, float frequency, float amplitude)
         {
-            for (int y = 0; y < mapHeight; y++)
+            float gain = 1f;
+            float sum = 0f;
+            for (int i = 0; i < octaves; i++)
             {
-                for (int x = 0; x < mapWidth; x++)
-                {
-                    noiseMap[x, y] = Mathf.InverseLerp(minLocalNoiseHeight, maxLocalNoiseHeight, noiseMap[x, y]);
-                }
+                sum +=  Mathf.PerlinNoise(x * gain / frequency, y * gain / frequency) * amplitude / gain;
+                gain *= 2f;
             }
+
+            return sum;
         }
 
-        return noiseMap;
+        private static void SaveFile(byte[] bytes)
+        {
+            string pathFile = string.Concat(Application.dataPath, "/Textures/Heightmap.png");
+            Debug.Log(string.Concat("Creating Texture Heightmap:", pathFile));
+            File.WriteAllBytes(pathFile, bytes);
+            AssetDatabase.ImportAsset("Assets/Textures/Heightmap.png");
+        }
     }
 }

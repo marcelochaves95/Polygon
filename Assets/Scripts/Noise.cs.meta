@@ -1,7 +1,11 @@
 fileFormatVersion: 2
-guid: d4ed0d0ddb42c4af290db1cea4b1264f
-timeCreated: 1454753270
+<<<<<<< HEAD:Assets/Scripts/Data/MeshSettings.cs.meta
+guid: f3cce3b9cb6274d299978f334a2cefde
+timeCreated: 1496321326
 licenseType: Pro
+=======
+guid: 0ac4a4ef43aa45c49441de924b2f24c9
+>>>>>>> master:Assets/Scripts/Noise.cs.meta
 MonoImporter:
   serializedVersion: 2
   defaultReferences: []
