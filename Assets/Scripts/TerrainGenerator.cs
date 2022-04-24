@@ -6,14 +6,14 @@ namespace ProceduralTerrain
 {
     public class TerrainGenerator
     {
-        private readonly List<int> _triangles = new List<int>();
-        private readonly List<Vector3> _vertices = new List<Vector3>();
-        private readonly List<Vector3> _normals = new List<Vector3>();
-        private readonly List<Vector2> _uvs = new List<Vector2>();
+        //private readonly List<int> _triangles = new List<int>();
+        //private readonly List<Vector3> _vertices = new List<Vector3>();
+        //private readonly List<Vector3> _normals = new List<Vector3>();
+        //private readonly List<Vector2> _uvs = new List<Vector2>();
 
         private GameObject _terrain;
-        private MeshFilter _meshFilter;
-        private MeshRenderer _meshRenderer;
+        private MeshFilter meshFilter;
+        private MeshRenderer meshRenderer;
         private readonly Material _material;
         private readonly EMeshType _meshType;
         private readonly int _xSize;
@@ -43,104 +43,74 @@ namespace ProceduralTerrain
             _material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Terrain.mat");
         }
 
-        public void GenerateTerrain(bool hasSaveMesh = false)
+        public void GenerateTerrain()
         {
-            ClearLists();
+            CreateTerrain();
             CreateMesh();
-            CreateVertices(_xSize, _ySize, _heightmap, _maxHeight, _terrainColor);
-            
-            switch (_meshType)
-            {
-                case EMeshType.Smooth:
-                    CalculateNormalsSmooth();
-                    break;
-                case EMeshType.Flat:
-                    CalculateNormalsFlat();
-                    break;
-            }
-
-            switch (_shaderType)
-            {
-                case EShaderType.Basic:
-                    _meshRenderer.sharedMaterial.shader = _terrainShader;
-                    break;
-                case EShaderType.Color:
-                    _meshRenderer.sharedMaterial.shader = _terrainShaderColor;
-                    break;
-                case EShaderType.Texture:
-                    _meshRenderer.sharedMaterial.shader = _terrainShaderTexture;
-                    break;
-            }
-
-            if (hasSaveMesh)
-            {
-                SaveMesh(_shaderType);
-            }
         }
 
-        private void CreateMesh()
+        private void CreateTerrain()
         {
             _terrain = GameObject.Find("Terrain");
             if (!_terrain)
             {
-                //Object.DestroyImmediate(terrain);
+                _terrain = GameObject.Find("Terrain");
                 _terrain = GameObject.CreatePrimitive(PrimitiveType.Plane);
                 _terrain.name = "Terrain";
-                _meshRenderer = _terrain.GetComponent<MeshRenderer>();
-                _meshRenderer.sharedMaterial = _material;
-                _meshFilter = _terrain.GetComponent<MeshFilter>();
-                _meshFilter.sharedMesh = new Mesh
-                {
-                    name = "Procedural Mesh"
-                };
+                _terrain.transform.position = new Vector3(0, 0, 0);
             }
 
-            if (!_meshRenderer)
-            {
-                _meshRenderer = _terrain.GetComponent<MeshRenderer>();
-                _meshRenderer.sharedMaterial = _material;
-            }
-
-            if (!_meshFilter)
-            {
-                _meshFilter = _terrain.GetComponent<MeshFilter>();
-                _meshFilter.sharedMesh = new Mesh
-                {
-                    name = "Procedural Mesh"
-                };
-            }
-            
-            _terrain.transform.position = new Vector3(0, 0, 0);
+            meshFilter = TryAddComponent<MeshFilter>();
+            meshRenderer = TryAddComponent<MeshRenderer>();
         }
 
-        private void SaveMesh(EShaderType shaderType)
+        private void CreateMesh()
         {
-            string meshes = "Assets/Meshes/" + shaderType + ".asset";
-            AssetDatabase.CreateAsset(_meshFilter.sharedMesh, meshes);
-            AssetDatabase.SaveAssets();
+            Mesh mesh = new Mesh();
+
+            CreateVertices(ref mesh, _xSize, _ySize, _heightmap, _maxHeight, _terrainColor);
+
+            if (_meshType == EMeshType.Flat)
+            {
+                CalculateNormalsFlat(ref mesh);
+            }
+
+            CalculateNormals(ref mesh);
+            switch (_shaderType)
+            {
+                case EShaderType.Basic:
+                    meshRenderer.sharedMaterial.shader = _terrainShader;
+                    break;
+                case EShaderType.Color:
+                    meshRenderer.sharedMaterial.shader = _terrainShaderColor;
+                    break;
+                case EShaderType.Texture:
+                    meshRenderer.sharedMaterial.shader = _terrainShaderTexture;
+                    break;
+            }
         }
 
-        private void CreateVertices(int xSize, int ySize, Texture2D heightmap, int maxHeight, TerrainColor terrainColor)
+        private T TryAddComponent<T>() where T : Component
+        {
+            T component = _terrain.GetComponent<T>();
+            return component ? component : _terrain.AddComponent<T>();
+        }
+
+        private void CreateVertices(ref Mesh mesh, int xSize, int ySize, Texture2D heightmap, int maxHeight, TerrainColor terrainColor)
         {
             List<Color> colours = new List<Color>();
+            List<Vector3> vertices = new List<Vector3>();
+            List<Vector2> uvs = new List<Vector2>();
+
             for (int z = 0; z <= ySize - 1; z++)
             {
                 for (int x = 0; x <= xSize - 1; x++)
                 {
                     Vector2 uv = new Vector2(x / (float) xSize, z / (float) ySize);
-                    float height;
-                    try
-                    {
-                        height = heightmap.GetPixelBilinear(uv.x, uv.y).grayscale * maxHeight;
-                    }
-                    catch (UnityException)
-                    {
-                        TextureIsRead(heightmap);
-                        height = heightmap.GetPixelBilinear(uv.x, uv.y).grayscale * maxHeight;
-                    }
+                    float height = heightmap.GetPixelBilinear(uv.x, uv.y).grayscale * maxHeight;
 
-                    _vertices.Add(new Vector3(x, height, z));
-                    _uvs.Add(uv);
+                    vertices.Add(new Vector3(x, height, z));
+                    uvs.Add(uv);
                     if (height <= maxHeight * 0.45)
                     {
                         colours.Add(terrainColor.BottomColor);
@@ -150,7 +120,7 @@ namespace ProceduralTerrain
                         float constant;
                         if (height > maxHeight * 0.45 && height <= maxHeight * 0.55)
                         {
-                            constant = (height - (maxHeight * 0.45f)) * 10;
+                            constant = (height - maxHeight * 0.45f) * 10;
                             colours.Add(Color.Lerp(terrainColor.BottomColor, terrainColor.MiddleColor, constant));
                         }
                         else if (height > maxHeight * 0.55 && height <= maxHeight * 0.75)
@@ -159,7 +129,7 @@ namespace ProceduralTerrain
                         }
                         else if (height > maxHeight * 0.75 && height < maxHeight * 0.85)
                         {
-                            constant = (height - (maxHeight * 0.75f)) * 10;
+                            constant = (height - maxHeight * 0.75f) * 10;
                             colours.Add(Color.Lerp(terrainColor.MiddleColor, terrainColor.TopColor, constant));
                         }
                         else if (height > maxHeight * 0.85 && height <= maxHeight)
@@ -170,113 +140,93 @@ namespace ProceduralTerrain
                 }
             }
 
-            _meshFilter.sharedMesh.vertices = _vertices.ToArray();
-            _meshFilter.sharedMesh.colors = colours.ToArray();
-            _meshFilter.sharedMesh.uv = _uvs.ToArray();
+            mesh.vertices = vertices.ToArray();
+            mesh.colors = colours.ToArray();
+            mesh.uv = uvs.ToArray();
+            List<int> triangles = new List<int>();
             for (int i = 0; i <= (xSize - 1) * (ySize - 1); i++)
             {
                 if (i % xSize == 0)
                 {
-                    _triangles.Add(i);
-                    _triangles.Add(i + xSize);
-                    _triangles.Add(i + 1);
+                    triangles.Add(i);
+                    triangles.Add(i + xSize);
+                    triangles.Add(++i);
                 }
                 else if ((i + 1) % xSize == 0)
                 {
-                    _triangles.Add(i);
-                    _triangles.Add(i + xSize - 1);
-                    _triangles.Add(i + xSize);
+                    triangles.Add(i);
+                    triangles.Add(i + xSize - 1);
+                    triangles.Add(i + xSize);
                 }
                 else
                 {
-                    _triangles.Add(i);
-                    _triangles.Add(i + xSize);
-                    _triangles.Add(i + 1);
-                    _triangles.Add(i);
-                    _triangles.Add(i + xSize - 1);
-                    _triangles.Add(i + xSize);
+                    triangles.Add(i);
+                    triangles.Add(i + xSize);
+                    triangles.Add(++i);
+                    triangles.Add(i);
+                    triangles.Add(i + xSize - 1);
+                    triangles.Add(i + xSize);
                 }
             }
 
-            _meshFilter.sharedMesh.triangles = _triangles.ToArray();
+            mesh.triangles = triangles.ToArray();
         }
 
-        private void CalculateNormalsSmooth()
+        private void CalculateNormals(ref Mesh mesh)
         {
-            for (int i = 0; i < _vertices.Count; i++)
+            Vector3[] normals = new Vector3[mesh.vertices.Length];
+            for (int i = 0; i < mesh.triangles.Length; i++)
             {
-                Vector3 normalMed = new Vector3(0, 0, 0);
-                int flag = 0;
-                for (int j = 0; j < _triangles.Count - 3; j += 3)
-                {
-                    if (i != _triangles[j] && i != _triangles[j + 1] && i != _triangles[j + 2])
-                    {
-                        continue;
-                    }
-                    Vector3 v1 = _vertices[_triangles[j + 1]] - _vertices[_triangles[j]];
-                    Vector3 v2 = _vertices[_triangles[j + 2]] - _vertices[_triangles[j]];
-                    Vector3 normal = Vector3.Cross(v1, v2);
-                    normalMed += normal;
-                    flag++;
-                }
-                normalMed /= flag;
-                normalMed.Normalize();
-                _normals.Add(normalMed);
+                int v0 = mesh.triangles[i];
+                int v1 = mesh.triangles[++i];
+                int v2 = mesh.triangles[++i];
+
+                Vector3 normal = CalculateTriangleNormal(mesh, v0, v1, v2);
+
+                normals[v0] += normal;
+                normals[v1] += normal;
+                normals[v2] += normal;
             }
 
-            _meshFilter.sharedMesh.normals = _normals.ToArray();
-        }
-
-        private void CalculateNormalsFlat()
-        {
-            for (int i = 0; i < _vertices.Count - 3; i += 3)
+            for (int i = 0; i < normals.Length; i++)
             {
-                Vector3 normalMed = new Vector3(0, 0, 0);
-                int flag = 0;
-                for (int j = 0; j < _triangles.Count - 3; j += 3)
-                {
-                    if (i != _triangles[j] && i != _triangles[j + 1] && i != _triangles[j + 2])
-                    {
-                        continue;
-                    }
-                    Vector3 v1 = _vertices[_triangles[j + 1]] - _vertices[_triangles[j]];
-                    Vector3 v2 = _vertices[_triangles[j + 2]] - _vertices[_triangles[j]];
-                    Vector3 normal = Vector3.Cross(v1, v2);
-                    normalMed += normal;
-                    flag++;
-                }
-                normalMed /= flag;
-                normalMed.Normalize();
-                _normals.Add(normalMed);
-                _normals.Add(normalMed);
-                _normals.Add(normalMed);
-                if (i >= _vertices.Count - 5)
-                {
-                    _normals.Add(normalMed);
-                }
+                normals[i].Normalize();
             }
 
-            _meshFilter.sharedMesh.normals = _normals.ToArray();
+            mesh.normals = normals;
         }
 
-        private void TextureIsRead(Texture2D heightmap)
+        private Vector3 CalculateTriangleNormal(Mesh mesh, int v0, int v1, int v2)
         {
-            string assetPath = AssetDatabase.GetAssetPath(heightmap);
-            TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-            if (importer != null)
+            Vector3 toV1 = mesh.vertices[v1] - mesh.vertices[v0];
+            Vector3 toV2 = mesh.vertices[v2] - mesh.vertices[v0];
+
+            return Vector3.Cross(toV1, toV2);
+        }
+
+        private void CalculateNormalsFlat(ref Mesh mesh)
+        {
+            List<Vector3> vertices = new List<Vector3>();
+            List<Vector2> uvs = new List<Vector2>();
+            List<Color> colors = new List<Color>();
+            List<int> indices = new List<int>();
+
+            int index = 0;
+            for (int triangle = 0; triangle < mesh.triangles.Length; triangle++)
             {
-                importer.isReadable = true;
-                AssetDatabase.ImportAsset(assetPath);
-                AssetDatabase.Refresh();
+                int indexTriangle = mesh.triangles[triangle];
+
+                vertices.Add(mesh.vertices[indexTriangle]);
+                uvs.Add(mesh.uv[indexTriangle]);
+                colors.Add(mesh.colors[indexTriangle]);
+
+                indices.Add(index++);
             }
-        }
-        
-        private void ClearLists()
-        {
-            _vertices.Clear();
-            _triangles.Clear();
-            _normals.Clear();
-            _uvs.Clear();
+
+            mesh.vertices = vertices.ToArray();
+            mesh.uv = uvs.ToArray();
+            mesh.colors = colors.ToArray();
+            mesh.SetIndices(indices.ToArray(), MeshTopology.Triangles, 0);
         }
     }
 }

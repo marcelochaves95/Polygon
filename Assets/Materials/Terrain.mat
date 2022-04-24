@@ -5,7 +5,8 @@ Material:
   serializedVersion: 6
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_Name: Terrain
   m_Shader: {fileID: 4800000, guid: 27143008e5d3f1f40a61692e8c0c0771, type: 3}
   m_ShaderKeywords: _EMISSION _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A _SUNDISK_HIGH_QUALITY
@@ -47,7 +48,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 7a6cb18162a28b641b4fb8e1e73c3819, type: 3}
+        m_Texture: {fileID: 2800000, guid: e36d15b65ccd248c19a846616a6767f9, type: 3}
         m_Scale: {x: 5, y: 5}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -83,11 +84,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SandTex:
-        m_Texture: {fileID: 2800000, guid: 2407ff3deb531524f925c2f39484cbe3, type: 3}
+        m_Texture: {fileID: 2800000, guid: ac0c104559b894175bf79ac253d17ca3, type: 3}
         m_Scale: {x: 100, y: 100}
         m_Offset: {x: 0, y: 0}
     - _SnowTex:
-        m_Texture: {fileID: 2800000, guid: 5f5b9d2fc16c4c34eb6defbbab7d5de5, type: 3}
+        m_Texture: {fileID: 2800000, guid: 22da49d227e55449d9ab0dbc09fe7f46, type: 3}
         m_Scale: {x: 5, y: 5}
         m_Offset: {x: 0, y: 0}
     - _Splat0:
@@ -114,11 +115,11 @@ Material:
     - _DstBlend: 0
     - _Exposure: 1.39
     - _GlossMapScale: 0.62
-    - _Glossiness: 0.104
+    - _Glossiness: 0
     - _GlossyReflections: 1
     - _GrassHeight: 46.06
     - _MaxHeight: 38.49
-    - _Metallic: 0.489
+    - _Metallic: 0.343
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
@@ -136,3 +137,4 @@ Material:
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GroundColor: {r: 0.369, g: 0.349, b: 0.341, a: 1}
     - _SkyTint: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_BuildTextureStacks: []

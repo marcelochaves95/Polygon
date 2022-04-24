@@ -6,6 +6,8 @@ namespace ProceduralTerrain
 {
     public static class Noise
     {
+        private const string HEIGHTMAP_PATH = "Assets/Textures/Heightmap.png";
+
         public static void CreateNoiseTexture(int textureResolution)
         {
             int octaves = 8;
@@ -30,7 +32,7 @@ namespace ProceduralTerrain
             noiseTexture.SetPixels(pixes);
             noiseTexture.Apply();
             byte[] bytes = noiseTexture.EncodeToPNG();
-            SaveFile(bytes);
+            SaveFileHeightMap(bytes);
         }
 
         private static float OctavesNoise2D(float x, float y, int octaves, float frequency, float amplitude)
@@ -46,12 +48,24 @@ namespace ProceduralTerrain
             return sum;
         }
 
-        private static void SaveFile(byte[] bytes)
+        private static void SaveFileHeightMap(byte[] bytes)
         {
-            string pathFile = string.Concat(Application.dataPath, "/Textures/Heightmap.png");
-            Debug.Log(string.Concat("Creating Texture Heightmap:", pathFile));
-            File.WriteAllBytes(pathFile, bytes);
-            AssetDatabase.ImportAsset("Assets/Textures/Heightmap.png");
+            string assetPath = $"{Application.dataPath}/Textures/Heightmap.png";
+            Debug.Log($"Creating Texture Heightmap: {assetPath}");
+            File.WriteAllBytes(assetPath, bytes);
+            AssetDatabase.ImportAsset(HEIGHTMAP_PATH);
+            SetTextureImporterFormat();
+        }
+        
+        private static void SetTextureImporterFormat()
+        {
+            TextureImporter importer = AssetImporter.GetAtPath(HEIGHTMAP_PATH) as TextureImporter;
+            if (importer)
+            {
+                importer.isReadable = true;
+                AssetDatabase.ImportAsset(HEIGHTMAP_PATH);
+                AssetDatabase.Refresh();
+            }
         }
     }
 }
