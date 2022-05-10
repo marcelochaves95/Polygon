@@ -1,39 +1,29 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class MeshData
 {
     private Mesh _mesh;
-    private readonly VertexData _vertexData;
-    private readonly WaitForSeconds _waitForSeconds;
+    private MeshSettings _meshSettings;
+    private VertexData _vertexData;
 
     private int[] _triangles;
     private Vector3[] _vertices;
     private Vector2[] _uv;
     private Color[] _colors;
-    private int _height;
-    private float _noiseFrequency;
 
-    public MeshData(Mesh mesh, VertexData vertexData, MonoBehaviour monoBehaviour, float delay)
+    public MeshData(Mesh mesh)
     {
         _mesh = mesh;
-        _vertexData = vertexData;
-        _waitForSeconds = new WaitForSeconds(delay);
-
-        GenerateVertices();
-        //monoBehaviour.StartCoroutine(GenerateTriangles());
-        GenerateTriangles2();
-        GenerateUV();
-        GenerateColors();
     }
 
-    public void GenerateMesh(bool useFlatShading, int height, float noiseFrequency)
+    public void GenerateMesh(MeshSettings meshSettings)
     {
-        _height = height;
-        _noiseFrequency = noiseFrequency;
+        _meshSettings = meshSettings;
+        _vertexData = meshSettings.VertexData;
+
         GenerateVertices();
-        GenerateTriangles2();
+        GenerateTriangles();
         GenerateUV();
         GenerateColors();
 
@@ -43,7 +33,7 @@ public class MeshData
         _mesh.uv = _uv;
         _mesh.colors = _colors;
 
-        if (useFlatShading)
+        if (meshSettings.UseFlatShading)
         {
             FlatShading(ref _mesh);
         }
@@ -58,46 +48,14 @@ public class MeshData
         {
             for (int x = 0; x <= _vertexData.XSize; x++)
             {
-                float y = GetNoiseSample(x, z);
+                float y = Mathf.PerlinNoise(x * _meshSettings.NoiseFrequency.Value, z * _meshSettings.NoiseFrequency.Value) * _meshSettings.Height.Value;
                 _vertices[i] = new Vector3(x, y, z);
                 i++;
             }
         }
     }
-
-    private float GetNoiseSample(int x, int z)
-    {
-        return Mathf.PerlinNoise(x * _noiseFrequency, z * _noiseFrequency) * _height;
-    }
-
-    private IEnumerator GenerateTriangles()
-    {
-        _triangles = new int[_vertexData.XSize * _vertexData.ZSize * 6];
-
-        int vertexCount = 0;
-        int trianglesCount = 0;
-        for (int z = 0; z < _vertexData.ZSize; z++)
-        {
-            for (int x = 0; x < _vertexData.XSize; x++)
-            {
-                _triangles[trianglesCount + 0] = vertexCount + 0;
-                _triangles[trianglesCount + 1] = vertexCount + _vertexData.XSize + 1;
-                _triangles[trianglesCount + 2] = vertexCount + 1;
-                _triangles[trianglesCount + 3] = vertexCount + 1;
-                _triangles[trianglesCount + 4] = vertexCount + _vertexData.XSize + 1;
-                _triangles[trianglesCount + 5] = vertexCount + _vertexData.XSize + 2;
-
-                vertexCount++;
-                trianglesCount += 6;
-
-                yield return _waitForSeconds;
-            }
-
-            vertexCount++;
-        }
-    }
     
-    private void GenerateTriangles2()
+    private void GenerateTriangles()
     {
         _triangles = new int[_vertexData.XSize * _vertexData.ZSize * 6];
 
@@ -193,7 +151,6 @@ public class MeshData
             vertices.Add(mesh.vertices[indexTriangle]);
             uv.Add(mesh.uv[indexTriangle]);
             colors.Add(mesh.colors[indexTriangle]);
-
             indices.Add(index++);
         }
 

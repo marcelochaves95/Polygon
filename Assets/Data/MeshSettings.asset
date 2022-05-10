@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: MeshSettings
   m_EditorClassIdentifier: Assembly-CSharp::MeshSettings
   UseFlatShading: 0
-  UseDelay: 0
-  Delay: 0
+  UseDelay: 1
+  Delay: 0.01
   Height:
     Value: 3
   NoiseFrequency:
-    Value: 0.3
+    Value: 0.6
   VertexData:
     XSize: 20
     ZSize: 20

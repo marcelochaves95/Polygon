@@ -1,7 +1,7 @@
 using System;
 
 [Serializable]
-public class SliderSettings
+public class UISettings
 {
     public float Value;
 }
