@@ -1,3 +1,3 @@
-# Procedural Terrain
+# Procedural mesh generator.
 
-Creation of procedural terrain from a heightmap texture.
+Creation of procedural mesh.
