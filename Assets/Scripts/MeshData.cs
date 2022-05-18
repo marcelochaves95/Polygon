@@ -53,17 +53,6 @@ public class MeshData
             {
                 float y = Mathf.PerlinNoise(x * _meshSettings.NoiseFrequency.Value, z * _meshSettings.NoiseFrequency.Value) * _meshSettings.Height.Value;
                 _vertices[i] = new Vector3(x, y, z);
-
-                // if (y > _vertexSettings.MaxTerrainHeight)
-                // {
-                //     _vertexSettings.MaxTerrainHeight = y;
-                // }
-                //
-                // if (y < _vertexSettings.MinTerrainHeight)
-                // {
-                //     _vertexSettings.MinTerrainHeight = y;
-                // }
-
                 i++;
             }
         }
@@ -114,7 +103,6 @@ public class MeshData
         {
             for (int x = 0; x <= _vertexSettings.XSize; x++)
             {
-                float height = Mathf.InverseLerp(_vertexSettings.MinTerrainHeight, _vertexSettings.MaxTerrainHeight, _vertices[i].y);
                 _colors[i] = _vertexSettings.Gradient.Evaluate(_vertices[i].y);
                 i++;
             }

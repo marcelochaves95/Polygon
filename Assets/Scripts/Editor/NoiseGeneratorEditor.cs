@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 
-public class NoiseWindow : EditorWindow
+public class NoiseGeneratorEditor : EditorWindow
 {
     private const string HEIGHTMAP_PATH = "Assets/Textures/Heightmap.png";
 
@@ -10,12 +10,12 @@ public class NoiseWindow : EditorWindow
     private int _textureResolution = 1024;
     private int _octaves = 8;
 
-    [MenuItem("Noise/Generate Noise...")]
+    [MenuItem("Window/Noise Generator", priority = 99999)]
     private static void Init()
     {
-        NoiseWindow window = GetWindow<NoiseWindow>();
-        window.titleContent.text = nameof(NoiseWindow);
-        window.Show();
+        NoiseGeneratorEditor noiseGeneratorEditor = GetWindow<NoiseGeneratorEditor>();
+        noiseGeneratorEditor.titleContent.text = "Noise Generator";
+        noiseGeneratorEditor.Show();
     }
 
     private void OnGUI()
@@ -90,7 +90,7 @@ public class NoiseWindow : EditorWindow
         AssetDatabase.ImportAsset(HEIGHTMAP_PATH);
         SetTextureImporterFormat();
     }
-    
+
     private void SetTextureImporterFormat()
     {
         TextureImporter importer = AssetImporter.GetAtPath(HEIGHTMAP_PATH) as TextureImporter;
