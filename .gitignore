@@ -42,3 +42,5 @@ Assets/.DS_Store
 Logs
 UserSettings
 Assets/Scripts/.DS_Store
+Assets/Resources
+Assets/Resources.meta
