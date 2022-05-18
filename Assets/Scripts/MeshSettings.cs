@@ -1,17 +1,20 @@
 using UnityEngine;
 
-[CreateAssetMenu]
-public class MeshSettings : ScriptableObject
+namespace Polygon
 {
-    public bool UseFlatShading;
-    public UISettings Height;
-    public UISettings NoiseFrequency;
-    public VertexSettings vertexSettings;
-
-    public void SetDefaultValues()
+    [CreateAssetMenu]
+    public class MeshSettings : ScriptableObject
     {
-        UseFlatShading = true;
-        Height.Value = 3f;
-        NoiseFrequency.Value = 0.3f;
+        public bool UseFlatShading;
+        public UISettings Height;
+        public UISettings NoiseFrequency;
+        public VertexSettings vertexSettings;
+
+        public void SetDefaultValues()
+        {
+            UseFlatShading = true;
+            Height.Value = 3f;
+            NoiseFrequency.Value = 0.3f;
+        }
     }
 }

@@ -1,7 +1,10 @@
 using System;
 
-[Serializable]
-public class UISettings
+namespace Polygon
 {
-    public float Value;
+    [Serializable]
+    public class UISettings
+    {
+        public float Value;
+    }
 }
