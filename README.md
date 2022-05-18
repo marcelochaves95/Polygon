@@ -1,3 +1,3 @@
-# Procedural mesh generator.
+# Polygon
 
-Creation of procedural mesh.
+Polygon is a procedural mesh generator in Unity.
