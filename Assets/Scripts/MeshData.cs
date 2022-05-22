@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,29 +7,26 @@ namespace Polygon
     public class MeshData
     {
         private Mesh _mesh;
-
         private int[] _triangles;
         private Vector3[] _vertices;
         private Vector2[] _uv;
         private Color[] _colors;
 
-        private MeshSettings _meshSettings;
-        private VertexSettings _vertexSettings;
-
         public MeshData()
         {
             _mesh = new Mesh();
+            _triangles = Array.Empty<int>();
+            _vertices = Array.Empty<Vector3>();
+            _uv = Array.Empty<Vector2>();
+            _colors = Array.Empty<Color>();
         }
 
         public Mesh GenerateMesh(MeshSettings meshSettings)
         {
-            _meshSettings = meshSettings;
-            _vertexSettings = meshSettings.vertexSettings;
-
-            GenerateVertices();
-            GenerateTriangles();
-            GenerateUV();
-            GenerateColors();
+            GenerateVertices(ref _vertices, meshSettings);
+            GenerateTriangles(ref _triangles, meshSettings.vertexSettings);
+            GenerateUV(ref _uv, meshSettings.vertexSettings);
+            GenerateColors(ref _colors, meshSettings.vertexSettings);
 
             _mesh.Clear();
             _mesh.vertices = _vertices;
@@ -46,36 +44,45 @@ namespace Polygon
             return _mesh;
         }
 
-        private void GenerateVertices()
+        private void GenerateVertices(ref Vector3[] vertices, MeshSettings meshSettings)
         {
-            _vertices = new Vector3[(_vertexSettings.XSize + 1) * (_vertexSettings.ZSize + 1)];
-            for (int i = 0, z = 0; z <= _vertexSettings.ZSize; z++)
+            if (vertices == null)
             {
-                for (int x = 0; x <= _vertexSettings.XSize; x++)
+                throw new ArgumentNullException(nameof(vertices));
+            }
+
+            vertices = new Vector3[(meshSettings.vertexSettings.XSize + 1) * (meshSettings.vertexSettings.ZSize + 1)];
+            for (int i = 0, z = 0; z <= meshSettings.vertexSettings.ZSize; z++)
+            {
+                for (int x = 0; x <= meshSettings.vertexSettings.XSize; x++)
                 {
-                    float y = Mathf.PerlinNoise(x * _meshSettings.NoiseFrequency.Value, z * _meshSettings.NoiseFrequency.Value) * _meshSettings.Height.Value;
-                    _vertices[i] = new Vector3(x, y, z);
+                    float y = Mathf.PerlinNoise(x * meshSettings.NoiseFrequency.Value, z * meshSettings.NoiseFrequency.Value) * meshSettings.Height.Value;
+                    vertices[i] = new Vector3(x, y, z);
                     i++;
                 }
             }
         }
         
-        private void GenerateTriangles()
+        private void GenerateTriangles(ref int[] triangles, VertexSettings vertexSettings)
         {
-            _triangles = new int[_vertexSettings.XSize * _vertexSettings.ZSize * 6];
+            if (triangles == null)
+            {
+                throw new ArgumentNullException(nameof(triangles));
+            }
 
             int vertexCount = 0;
             int trianglesCount = 0;
-            for (int z = 0; z < _vertexSettings.ZSize; z++)
+            triangles = new int[vertexSettings.XSize * vertexSettings.ZSize * 6];
+            for (int z = 0; z < vertexSettings.ZSize; z++)
             {
-                for (int x = 0; x < _vertexSettings.XSize; x++)
+                for (int x = 0; x < vertexSettings.XSize; x++)
                 {
-                    _triangles[trianglesCount + 0] = vertexCount + 0;
-                    _triangles[trianglesCount + 1] = vertexCount + _vertexSettings.XSize + 1;
-                    _triangles[trianglesCount + 2] = vertexCount + 1;
-                    _triangles[trianglesCount + 3] = vertexCount + 1;
-                    _triangles[trianglesCount + 4] = vertexCount + _vertexSettings.XSize + 1;
-                    _triangles[trianglesCount + 5] = vertexCount + _vertexSettings.XSize + 2;
+                    triangles[trianglesCount + 0] = vertexCount + 0;
+                    triangles[trianglesCount + 1] = vertexCount + vertexSettings.XSize + 1;
+                    triangles[trianglesCount + 2] = vertexCount + 1;
+                    triangles[trianglesCount + 3] = vertexCount + 1;
+                    triangles[trianglesCount + 4] = vertexCount + vertexSettings.XSize + 1;
+                    triangles[trianglesCount + 5] = vertexCount + vertexSettings.XSize + 2;
 
                     vertexCount++;
                     trianglesCount += 6;
@@ -85,27 +92,37 @@ namespace Polygon
             }
         }
 
-        private void GenerateUV()
+        private void GenerateUV(ref Vector2[] uv, VertexSettings vertexSettings)
         {
-            _uv = new Vector2[_vertices.Length];
-            for (int i = 0, z = 0; z <= _vertexSettings.ZSize; z++)
+            if (uv == null)
             {
-                for (int x = 0; x <= _vertexSettings.XSize; x++)
+                throw new ArgumentNullException(nameof(uv));
+            }
+
+            uv = new Vector2[_vertices.Length];
+            for (int i = 0, z = 0; z <= vertexSettings.ZSize; z++)
+            {
+                for (int x = 0; x <= vertexSettings.XSize; x++)
                 {
-                    _uv[i] = new Vector2((float) x / _vertexSettings.XSize, (float) z / _vertexSettings.ZSize);
+                    uv[i] = new Vector2((float) x / vertexSettings.XSize, (float) z / vertexSettings.ZSize);
                     i++;
                 }
             }
         }
         
-        private void GenerateColors()
+        private void GenerateColors(ref Color[] colors, VertexSettings vertexSettings)
         {
-            _colors = new Color[_vertices.Length];
-            for (int i = 0, z = 0; z <= _vertexSettings.ZSize; z++)
+            if (colors == null)
             {
-                for (int x = 0; x <= _vertexSettings.XSize; x++)
+                throw new ArgumentNullException(nameof(colors));
+            }
+
+            colors = new Color[_vertices.Length];
+            for (int i = 0, z = 0; z <= vertexSettings.ZSize; z++)
+            {
+                for (int x = 0; x <= vertexSettings.XSize; x++)
                 {
-                    _colors[i] = _vertexSettings.Gradient.Evaluate(_vertices[i].y);
+                    colors[i] = vertexSettings.Gradient.Evaluate(_vertices[i].y);
                     i++;
                 }
             }
@@ -163,6 +180,15 @@ namespace Polygon
             mesh.uv = uv.ToArray();
             mesh.colors = colors.ToArray();
             mesh.SetIndices(indices.ToArray(), MeshTopology.Triangles, 0);
+        }
+
+        public void Clear()
+        {
+            _mesh.Clear();
+            Array.Clear(_triangles, 0, _triangles.Length);
+            Array.Clear(_vertices, 0, _vertices.Length);
+            Array.Clear(_uv, 0, _uv.Length);
+            Array.Clear(_colors, 0, _colors.Length);
         }
     }
 }
