@@ -18,11 +18,15 @@ namespace Polygon
         private void OnDestroy()
         {
             UIManager.OnUpdateUI -= OnUpdateUI;
+            _meshData.Clear();
         }
 
         private void OnUpdateUI(MeshSettings meshSettings)
         {
-            GenerateMesh(meshSettings);
+            if (meshSettings != null)
+            {
+                GenerateMesh(meshSettings);
+            }
         }
 
         private void GenerateMesh(MeshSettings meshSettings)
