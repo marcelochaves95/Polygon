@@ -115,11 +115,11 @@ Material:
     - _DstBlend: 0
     - _Exposure: 1.39
     - _GlossMapScale: 0.62
-    - _Glossiness: 0
+    - _Glossiness: 0.225
     - _GlossyReflections: 1
     - _GrassHeight: 46.06
     - _MaxHeight: 38.49
-    - _Metallic: 0.343
+    - _Metallic: 0.628
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
