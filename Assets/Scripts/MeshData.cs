@@ -46,11 +46,6 @@ namespace Polygon
 
         private void GenerateVertices(ref Vector3[] vertices, MeshSettings meshSettings)
         {
-            if (vertices == null)
-            {
-                throw new ArgumentNullException(nameof(vertices));
-            }
-
             vertices = new Vector3[(meshSettings.vertexSettings.XSize + 1) * (meshSettings.vertexSettings.ZSize + 1)];
             for (int i = 0, z = 0; z <= meshSettings.vertexSettings.ZSize; z++)
             {
@@ -65,14 +60,9 @@ namespace Polygon
         
         private void GenerateTriangles(ref int[] triangles, VertexSettings vertexSettings)
         {
-            if (triangles == null)
-            {
-                throw new ArgumentNullException(nameof(triangles));
-            }
-
+            triangles = new int[vertexSettings.XSize * vertexSettings.ZSize * 6];
             int vertexCount = 0;
             int trianglesCount = 0;
-            triangles = new int[vertexSettings.XSize * vertexSettings.ZSize * 6];
             for (int z = 0; z < vertexSettings.ZSize; z++)
             {
                 for (int x = 0; x < vertexSettings.XSize; x++)
@@ -94,11 +84,6 @@ namespace Polygon
 
         private void GenerateUV(ref Vector2[] uv, VertexSettings vertexSettings)
         {
-            if (uv == null)
-            {
-                throw new ArgumentNullException(nameof(uv));
-            }
-
             uv = new Vector2[_vertices.Length];
             for (int i = 0, z = 0; z <= vertexSettings.ZSize; z++)
             {
@@ -112,11 +97,6 @@ namespace Polygon
         
         private void GenerateColors(ref Color[] colors, VertexSettings vertexSettings)
         {
-            if (colors == null)
-            {
-                throw new ArgumentNullException(nameof(colors));
-            }
-
             colors = new Color[_vertices.Length];
             for (int i = 0, z = 0; z <= vertexSettings.ZSize; z++)
             {
