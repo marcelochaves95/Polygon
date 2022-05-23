@@ -1,4 +1,4 @@
-Shader "Custom/TerrainShader" {
+Shader "Custom/Mesh" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_Glossiness ("Smoothness", Range(0,1)) = 0.5
