@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,32 +28,40 @@ namespace Polygon
         private void SetupUI()
         {
             _meshSettings.SetDefaultValues();
-            _sliderHeight.value = _meshSettings.Height.Value;
-            _sliderNoiseFrequency.value = (int) (_meshSettings.NoiseFrequency.Value * 10);
-            _textHeight.text = (_meshSettings.Height.Value - 2).ToString(CultureInfo.InvariantCulture);
-            _textNoiseFrequency.text = ((int) (_meshSettings.NoiseFrequency.Value * 10)).ToString();
-            _toggleUseFlatShading.isOn = _meshSettings.UseFlatShading;
+            _sliderHeight.value = _meshSettings.Height;
+            _sliderNoiseFrequency.value = _meshSettings.NoiseFrequency * 10;
+            _textHeight.text = _meshSettings.Height.ToString();
+            _textNoiseFrequency.text = _meshSettings.NoiseFrequency.ToString();
+            switch (_meshSettings.GenerationMode)
+            {
+                case GenerationMode.Flat:
+                    _toggleUseFlatShading.isOn = true;
+                    break;
+                case GenerationMode.Smooth:
+                    _toggleUseFlatShading.isOn = false;
+                    break;
+            }
     
             UpdateUI();
         }
-    
+
         public void MakeFlat()
         {
-            _meshSettings.UseFlatShading = !_meshSettings.UseFlatShading;
+            _meshSettings.GenerationMode = _toggleUseFlatShading.isOn ? GenerationMode.Flat : GenerationMode.Smooth;
             UpdateUI();
         }
     
         public void UpdateHeight()
         {
-            _meshSettings.Height.Value = (int) _sliderHeight.value;
-            _textHeight.text = (_meshSettings.Height.Value - 2).ToString(CultureInfo.InvariantCulture);
+            _meshSettings.Height = (int) _sliderHeight.value;
+            _textHeight.text = _meshSettings.Height.ToString();
             UpdateUI();
         }
     
         public void UpdateNoiseFrequency()
         {
-            _meshSettings.NoiseFrequency.Value = _sliderNoiseFrequency.value * 0.1f;
-            _textNoiseFrequency.text = ((int) (_meshSettings.NoiseFrequency.Value * 10)).ToString();
+            _meshSettings.NoiseFrequency = _sliderNoiseFrequency.value * 0.1f;
+            _textNoiseFrequency.text = _meshSettings.NoiseFrequency.ToString();
             UpdateUI();
         }
     }
