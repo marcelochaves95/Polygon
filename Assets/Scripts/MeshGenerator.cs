@@ -23,7 +23,7 @@ namespace Polygon
 
         private void OnUpdateUI(MeshSettings meshSettings)
         {
-            if (meshSettings != null)
+            if (meshSettings)
             {
                 GenerateMesh(meshSettings);
             }
