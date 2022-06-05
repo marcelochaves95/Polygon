@@ -12,11 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bdfdf48fc4b5436c984399ac5fd98cbc, type: 3}
   m_Name: MeshSettings
   m_EditorClassIdentifier: Assembly-CSharp::MeshSettings
-  UseFlatShading: 1
-  Height:
-    Value: 3
-  NoiseFrequency:
-    Value: 0.3
+  GenerationMode: 0
+  Height: 3
+  NoiseFrequency: 0.3
   vertexSettings:
     XSize: 20
     ZSize: 20
